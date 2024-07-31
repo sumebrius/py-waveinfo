@@ -9,4 +9,5 @@ name = "pywav"
 crate-type = ["cdylib"]
 
 [dependencies]
+ascii = "1.1.0"
 pyo3 = "0.22.0"

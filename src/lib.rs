@@ -2,6 +2,8 @@ use pyo3::prelude::*;
 use std::fs::read;
 use std::path::PathBuf;
 
+mod chunks;
+
 #[pyclass]
 struct WavFile {
     #[pyo3(get)]
