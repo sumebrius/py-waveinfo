@@ -1,15 +1,23 @@
+use ascii::AsciiString;
+use pyo3::{exceptions::PyValueError, PyErr};
 use std::{error::Error, fmt::Display};
 
-use ascii::AsciiString;
+mod fmt;
 
 #[derive(Debug)]
-struct ChunkParseError {
+pub struct ChunkParseError {
     chunk_code: String,
     reason: String,
 }
 
+impl From<ChunkParseError> for PyErr {
+    fn from(value: ChunkParseError) -> Self {
+        PyValueError::new_err(value.reason)
+    }
+}
+
 impl ChunkParseError {
-    fn new(chunk_code: Option<&str>, reason: String) -> Self {
+    pub fn new(chunk_code: Option<&str>, reason: String) -> Self {
         ChunkParseError {
             chunk_code: chunk_code.unwrap_or("Unknown").to_string(),
             reason,
@@ -29,14 +37,14 @@ impl Display for ChunkParseError {
 
 impl Error for ChunkParseError {}
 
-struct Chunk<'a> {
-    id: String,
-    size: usize,
-    data: &'a [u8],
+pub struct Chunk<'a> {
+    pub id: String,
+    pub size: usize,
+    pub data: &'a [u8],
 }
 
 impl<'a> Chunk<'a> {
-    fn from_data(chunk_data: &'a [u8]) -> Result<Self, ChunkParseError> {
+    pub fn from_data(chunk_data: &'a [u8]) -> Result<Self, ChunkParseError> {
         let id_bytes = chunk_data.get(0..4).ok_or(ChunkParseError::new(
             None,
             "Invalid chunk code: too short".to_string(),
