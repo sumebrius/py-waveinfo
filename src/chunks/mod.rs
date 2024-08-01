@@ -53,7 +53,7 @@ impl<'a> Chunk<'a> {
             .map_err(|err| ChunkParseError::new(None, format!("Invalid chunk code: {}", err)))?
             .to_string();
 
-        let size_bytes = chunk_data.get(0..4).ok_or(ChunkParseError::new(
+        let size_bytes = chunk_data.get(4..8).ok_or(ChunkParseError::new(
             Some(&id),
             "Invalid size field".to_string(),
         ))?;
