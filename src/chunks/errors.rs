@@ -61,6 +61,10 @@ impl From<FieldParseError> for PyErr {
     }
 }
 
+impl From<FieldParseError> for () {
+    fn from(_value: FieldParseError) -> Self {}
+}
+
 impl Display for FieldParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
