@@ -20,9 +20,16 @@ impl From<ChunkParseError> for () {
 }
 
 impl ChunkParseError {
-    pub fn new(chunk_code: Option<&str>, reason: String) -> Self {
-        ChunkParseError {
-            chunk_code: chunk_code.unwrap_or("Unknown").to_string(),
+    pub fn new(reason: String) -> Self {
+        Self {
+            chunk_code: "Unknown".to_string(),
+            reason,
+        }
+    }
+
+    pub fn new_with_id(id: String, reason: String) -> Self {
+        Self {
+            chunk_code: id,
             reason,
         }
     }

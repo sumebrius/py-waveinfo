@@ -13,32 +13,31 @@ pub struct Chunk<'a> {
 impl<'a> Chunk<'a> {
     pub fn from_data(chunk_data: &'a [u8]) -> Result<Self, errors::ChunkParseError> {
         let id_bytes = chunk_data.get(0..4).ok_or(errors::ChunkParseError::new(
-            None,
             "Invalid chunk code: too short".to_string(),
         ))?;
         let id = AsciiString::from_ascii(id_bytes)
-            .map_err(|err| {
-                errors::ChunkParseError::new(None, format!("Invalid chunk code: {}", err))
-            })?
+            .map_err(|err| errors::ChunkParseError::new(format!("Invalid chunk code: {}", err)))?
             .to_string();
 
-        let size_bytes = chunk_data.get(4..8).ok_or(errors::ChunkParseError::new(
-            Some(&id),
-            "Invalid size field".to_string(),
-        ))?;
+        let size_bytes = chunk_data
+            .get(4..8)
+            .ok_or(errors::ChunkParseError::new_with_id(
+                id,
+                "Invalid size field".to_string(),
+            ))?;
         let size = u32::from_le_bytes(size_bytes.try_into().unwrap())
             .try_into()
             .map_err(|_| {
-                errors::ChunkParseError::new(
-                    Some(&id),
+                errors::ChunkParseError::new_with_id(
+                    id,
                     "Chunk size too big for architecture".to_string(),
                 )
             })?;
 
         let data = chunk_data
             .get(8..(8 + size))
-            .ok_or(errors::ChunkParseError::new(
-                Some(&id),
+            .ok_or(errors::ChunkParseError::new_with_id(
+                id,
                 "Data out of range".to_string(),
             ))?;
 
