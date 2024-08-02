@@ -57,4 +57,53 @@ impl<'a> Chunk<'a> {
 
         Ok(Chunk { id, size, data })
     }
+
+    pub fn data_bytes(
+        &self,
+        offset: usize,
+        len: usize,
+        field_name: &str,
+    ) -> Result<&[u8], errors::FieldParseError> {
+        self.data.get(offset..offset + len).ok_or(self.field_error(
+            field_name.into(),
+            offset,
+            "Too short field".to_string(),
+        ))
+    }
+
+    pub fn data_string(
+        &self,
+        offset: usize,
+        len: usize,
+        field_name: &str,
+    ) -> Result<String, errors::FieldParseError> {
+        let bytes = self.data_bytes(offset, len, field_name)?;
+        Ok(AsciiString::from_ascii(bytes)
+            .map_err(|err| self.field_error(field_name.into(), offset, err.to_string()))?
+            .to_string())
+    }
+
+    pub fn data_u16(
+        &self,
+        offset: usize,
+        field_name: &str,
+    ) -> Result<u16, errors::FieldParseError> {
+        let bytes: [u8; 2] = self
+            .data_bytes(offset, 2, field_name)?
+            .try_into()
+            .expect("Less than 2 bytes returned");
+        Ok(u16::from_le_bytes(bytes))
+    }
+
+    pub fn data_u32(
+        &self,
+        offset: usize,
+        field_name: &str,
+    ) -> Result<u32, errors::FieldParseError> {
+        let bytes: [u8; 4] = self
+            .data_bytes(offset, 4, field_name)?
+            .try_into()
+            .expect("Less than 4 bytes returned");
+        Ok(u32::from_le_bytes(bytes))
+    }
 }
