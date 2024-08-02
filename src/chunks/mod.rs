@@ -1,8 +1,7 @@
 use ascii::AsciiString;
 
-mod fmt;
-
 pub mod errors;
+pub mod fmt;
 
 pub struct Chunk<'a> {
     pub id: String,
@@ -18,7 +17,7 @@ impl<'a> Chunk<'a> {
         reason: String,
     ) -> errors::FieldParseError {
         errors::FieldParseError {
-            chunk_code: self.id,
+            chunk_code: self.id.clone(),
             field_name,
             position,
             reason,
@@ -36,14 +35,14 @@ impl<'a> Chunk<'a> {
         let size_bytes = chunk_data
             .get(4..8)
             .ok_or(errors::ChunkParseError::new_with_id(
-                id,
+                id.clone(),
                 "Invalid size field".to_string(),
             ))?;
         let size = u32::from_le_bytes(size_bytes.try_into().unwrap())
             .try_into()
             .map_err(|_| {
                 errors::ChunkParseError::new_with_id(
-                    id,
+                    id.clone(),
                     "Chunk size too big for architecture".to_string(),
                 )
             })?;
@@ -51,7 +50,7 @@ impl<'a> Chunk<'a> {
         let data = chunk_data
             .get(8..(8 + size))
             .ok_or(errors::ChunkParseError::new_with_id(
-                id,
+                id.clone(),
                 "Data out of range".to_string(),
             ))?;
 
