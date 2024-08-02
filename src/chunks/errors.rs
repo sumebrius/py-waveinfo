@@ -46,3 +46,29 @@ impl Display for ChunkParseError {
 }
 
 impl Error for ChunkParseError {}
+
+#[derive(Debug)]
+pub struct FieldParseError {
+    pub(crate) chunk_code: String,
+    pub(crate) field_name: String,
+    pub(crate) position: usize,
+    pub(crate) reason: String,
+}
+
+impl From<FieldParseError> for PyErr {
+    fn from(value: FieldParseError) -> Self {
+        PyValueError::new_err(value.reason)
+    }
+}
+
+impl Display for FieldParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Unable to parse {} chunk field {}: {}",
+            self.chunk_code, self.field_name, self.reason
+        )
+    }
+}
+
+impl Error for FieldParseError {}

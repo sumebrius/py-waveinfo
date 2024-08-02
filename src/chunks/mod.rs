@@ -11,6 +11,20 @@ pub struct Chunk<'a> {
 }
 
 impl<'a> Chunk<'a> {
+    fn field_error(
+        &self,
+        field_name: String,
+        position: usize,
+        reason: String,
+    ) -> errors::FieldParseError {
+        errors::FieldParseError {
+            chunk_code: self.id,
+            field_name,
+            position,
+            reason,
+        }
+    }
+
     pub fn from_data(chunk_data: &'a [u8]) -> Result<Self, errors::ChunkParseError> {
         let id_bytes = chunk_data.get(0..4).ok_or(errors::ChunkParseError::new(
             "Invalid chunk code: too short".to_string(),
