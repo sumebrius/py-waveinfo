@@ -3,6 +3,7 @@ use std::fs::read;
 use std::path::PathBuf;
 
 mod chunks;
+mod formats;
 
 #[pyclass]
 struct WavFile {
