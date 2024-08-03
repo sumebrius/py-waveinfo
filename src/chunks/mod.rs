@@ -1,4 +1,5 @@
 use ascii::AsciiString;
+use errors::IncorrectChunkError;
 
 pub mod errors;
 pub mod fmt;
@@ -55,6 +56,17 @@ impl<'a> Chunk<'a> {
             ))?;
 
         Ok(Chunk { id, size, data })
+    }
+
+    pub fn validate_type(&self, expected_type: &str) -> Result<(), IncorrectChunkError> {
+        if expected_type == self.id {
+            Ok(())
+        } else {
+            Err(IncorrectChunkError {
+                expected_chunk_code: expected_type.to_string(),
+                actual_chunk_code: self.id.clone(),
+            })
+        }
     }
 
     pub fn data_bytes(

@@ -80,3 +80,46 @@ impl Display for FieldParseError {
 
 impl Error for FieldParseError {}
 impl ChunkError for FieldParseError {}
+
+#[derive(Debug)]
+pub struct IncorrectChunkError {
+    pub(crate) expected_chunk_code: String,
+    pub(crate) actual_chunk_code: String,
+}
+
+impl From<IncorrectChunkError> for PyErr {
+    fn from(value: IncorrectChunkError) -> Self {
+        PyValueError::new_err(value.to_string())
+    }
+}
+
+impl Display for IncorrectChunkError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Expected a {} chunk, got a {} chunk",
+            self.expected_chunk_code, self.actual_chunk_code
+        )
+    }
+}
+
+impl Error for IncorrectChunkError {}
+impl ChunkError for IncorrectChunkError {}
+
+#[derive(Debug)]
+pub enum ChunkLoadError {
+    IncorrectChunkError(IncorrectChunkError),
+    FieldParseError(FieldParseError),
+}
+
+impl From<IncorrectChunkError> for ChunkLoadError {
+    fn from(value: IncorrectChunkError) -> Self {
+        Self::IncorrectChunkError(value)
+    }
+}
+
+impl From<FieldParseError> for ChunkLoadError {
+    fn from(value: FieldParseError) -> Self {
+        Self::FieldParseError(value)
+    }
+}

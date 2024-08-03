@@ -1,4 +1,7 @@
-use super::{errors::FieldParseError, Chunk};
+use super::{
+    errors::{ChunkLoadError, FieldParseError},
+    Chunk,
+};
 
 pub struct Fmt {
     pub format_tag: [u8; 2],
@@ -14,9 +17,11 @@ pub struct Fmt {
 }
 
 impl<'a> TryFrom<Chunk<'a>> for Fmt {
-    type Error = FieldParseError;
+    type Error = ChunkLoadError;
 
     fn try_from(chunk: Chunk) -> Result<Self, Self::Error> {
+        chunk.validate_type("fmt ")?;
+
         let extension_size = chunk
             .data
             .get(16..18)
@@ -42,7 +47,8 @@ impl<'a> TryFrom<Chunk<'a>> for Fmt {
                     field_name: "cbSize".to_string(),
                     position: 16,
                     reason: "Invalid fmt extension size".to_string(),
-                })
+                }
+                .into())
             }
         };
 
