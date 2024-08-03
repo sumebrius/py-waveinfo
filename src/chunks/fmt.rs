@@ -16,10 +16,10 @@ pub struct Fmt {
     pub sub_format: Option<[u8; 16]>,
 }
 
-impl<'a> TryFrom<Chunk<'a>> for Fmt {
+impl<'a> TryFrom<&'a Chunk<'a>> for Fmt {
     type Error = ChunkLoadError;
 
-    fn try_from(chunk: Chunk) -> Result<Self, Self::Error> {
+    fn try_from(chunk: &'a Chunk<'a>) -> Result<Self, Self::Error> {
         chunk.validate_type("fmt ")?;
 
         let extension_size = chunk

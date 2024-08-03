@@ -70,10 +70,10 @@ impl<'a> Chunk<'a> {
         }
     }
 
-    pub fn load_type(self) -> Result<ChunkType<'a>, ChunkLoadError> {
+    pub fn load_type(&self) -> Result<ChunkType<'a>, ChunkLoadError> {
         Ok(match self.id.as_str() {
-            "fmt " => ChunkType::Fmt(self.try_into()?),
-            "fact" => ChunkType::Fact(self.try_into()?),
+            "fmt " => ChunkType::Fmt(&self.try_into()?),
+            "fact" => ChunkType::Fact(&self.try_into()?),
             "data" => ChunkType::Data(self),
             _ => ChunkType::Unknown(self),
         })
@@ -130,8 +130,9 @@ impl<'a> Chunk<'a> {
 }
 
 pub enum ChunkType<'a> {
-    Fmt(fmt::Fmt),
-    Fact(fact::Fact),
-    Data(Chunk<'a>),
-    Unknown(Chunk<'a>),
+    Fmt(&'a fmt::Fmt),
+    Fact(&'a fact::Fact),
+    Data(&'a Chunk<'a>),
+    Unknown(&'a Chunk<'a>),
+}
 }
