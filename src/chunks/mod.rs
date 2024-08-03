@@ -1,5 +1,5 @@
 use ascii::AsciiString;
-use errors::IncorrectChunkError;
+use errors::{ChunkLoadError, IncorrectChunkError};
 
 pub mod errors;
 pub mod fact;
@@ -70,6 +70,14 @@ impl<'a> Chunk<'a> {
         }
     }
 
+    pub fn load_type(self) -> Result<ChunkType<'a>, ChunkLoadError> {
+        Ok(match self.id.as_str() {
+            "fmt " => ChunkType::Fmt(self.try_into()?),
+            "fact" => ChunkType::Fact(self.try_into()?),
+            _ => ChunkType::Unknown(self),
+        })
+    }
+
     pub fn data_bytes(
         &self,
         offset: usize,
@@ -118,4 +126,10 @@ impl<'a> Chunk<'a> {
             .expect("Less than 4 bytes returned");
         Ok(u32::from_le_bytes(bytes))
     }
+}
+
+pub enum ChunkType<'a> {
+    Fmt(fmt::Fmt),
+    Fact(fact::Fact),
+    Unknown(Chunk<'a>),
 }
