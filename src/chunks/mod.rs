@@ -2,6 +2,7 @@ use ascii::AsciiString;
 use errors::IncorrectChunkError;
 
 pub mod errors;
+pub mod fact;
 pub mod fmt;
 
 pub struct Chunk<'a> {
