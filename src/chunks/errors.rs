@@ -3,6 +3,8 @@ use pyo3::PyErr;
 use std::error::Error;
 use std::fmt::Display;
 
+pub trait ChunkError: Into<PyErr> + Error {}
+
 #[derive(Debug)]
 pub struct ChunkParseError {
     pub(crate) chunk_code: String,
@@ -46,6 +48,7 @@ impl Display for ChunkParseError {
 }
 
 impl Error for ChunkParseError {}
+impl ChunkError for ChunkParseError {}
 
 #[derive(Debug)]
 pub struct FieldParseError {
@@ -76,3 +79,4 @@ impl Display for FieldParseError {
 }
 
 impl Error for FieldParseError {}
+impl ChunkError for FieldParseError {}
