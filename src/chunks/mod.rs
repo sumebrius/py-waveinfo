@@ -79,6 +79,13 @@ impl<'a> Chunk<'a> {
         })
     }
 
+    pub fn iter_chunks(&self) -> ChunkIterator {
+        ChunkIterator {
+            parent: self,
+            cursor: 0,
+        }
+    }
+
     pub fn data_bytes(
         &self,
         offset: usize,
@@ -135,4 +142,38 @@ pub enum ChunkType<'a> {
     Data(&'a Chunk<'a>),
     Unknown(&'a Chunk<'a>),
 }
+
+struct ChunkIterator<'a> {
+    parent: &'a Chunk<'a>,
+    cursor: usize,
+}
+
+impl<'a> Iterator for ChunkIterator<'a> {
+    type Item = Result<ChunkType<'a>, ChunkLoadError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cursor >= self.parent.size {
+            return None;
+        }
+
+        let next_chunk: Result<Chunk, ChunkLoadError> =
+            Chunk::from_data(&(self.parent.data)[self.cursor..]).map_err(|_| {
+                IncorrectChunkError {
+                    expected_chunk_code: "Container chunk".to_string(),
+                    actual_chunk_code: "Non-container chunk".to_string(),
+                }
+                .into()
+            });
+
+        let typed_next_chunk = next_chunk.map_or_else(Err, |chunk| chunk.load_type());
+
+        match typed_next_chunk {
+            Ok(_) => {
+                self.cursor += next_chunk.expect("Ok branch").size;
+            }
+            Err(_) => self.cursor = self.parent.size,
+        }
+
+        Some(typed_next_chunk)
+    }
 }
