@@ -1,7 +1,4 @@
-use super::{
-    errors::{ChunkLoadError, FieldParseError},
-    Chunk,
-};
+use super::{errors::ChunkLoadError, Chunk};
 
 pub struct Fmt {
     pub format_tag: [u8; 2],
@@ -16,52 +13,61 @@ pub struct Fmt {
     pub sub_format: Option<[u8; 16]>,
 }
 
-impl<'a> TryFrom<&'a Chunk<'a>> for Fmt {
+impl<'a> TryFrom<Chunk> for Fmt {
     type Error = ChunkLoadError;
 
-    fn try_from(chunk: &'a Chunk<'a>) -> Result<Self, Self::Error> {
+    fn try_from(mut chunk: Chunk) -> Result<Self, Self::Error> {
         chunk.validate_type("fmt ")?;
 
-        let extension_size = chunk
-            .data
-            .get(16..18)
-            .map(|bytes| u16::from_le_bytes(bytes.try_into().expect("Less than 2 bytes returned")));
+        let format_tag = chunk.data_bytes::<2>("wFormatTag")?;
+        let channels = chunk.data_u16("wChannels")?;
+        let samples_per_sec = chunk.data_u32("dwSamplesPerSec")?;
+        let avg_bytes_per_sec = chunk.data_u32("dwAvgBytesPerSec")?;
+        let block_align = chunk.data_u16("wBlockAlign")?;
+        let bits_per_sample = chunk.data_u16("wBitsPerSample")?;
 
-        let (valid_bits_per_sample, channel_mask, sub_format) = match extension_size {
-            Some(40) => {
-                let guid: [u8; 16] = chunk
-                    .data_bytes(24, 16, "SubFormat")?
-                    .try_into()
-                    .expect("Less than 16 bytes returned");
-                (
-                    Some(chunk.data_u16(18, "wValidBitsPerSample")?),
-                    Some(chunk.data_u32(10, "dwChannelMask")?),
-                    Some(guid),
-                )
-            }
-            Some(0) => (None, None, None),
-            None => (None, None, None),
-            Some(_) => {
-                return Err(FieldParseError {
-                    chunk_code: chunk.id,
-                    field_name: "cbSize".to_string(),
-                    position: 16,
-                    reason: "Invalid fmt extension size".to_string(),
-                }
-                .into())
-            }
+        let extension_size = match chunk.data.len() {
+            0 => None,
+            _ => Some(chunk.data_u16("cbSize")?),
         };
 
+        let (valid_bits_per_sample, channel_mask, sub_format) =
+            if let Some(extension_size) = extension_size {
+                if extension_size as usize != chunk.data.len() {
+                    return Err(chunk
+                        .field_error(
+                            "cbSize".to_string(),
+                            format!(
+                                "Extension size mismatch. Reported: {}. Found: {}",
+                                extension_size,
+                                chunk.data.len()
+                            ),
+                        )
+                        .into());
+                }
+                match extension_size {
+                    0 => (None, None, None),
+                    22 => (
+                        Some(chunk.data_u16("wValidBitsPerSample")?),
+                        Some(chunk.data_u32("dwChannelMask")?),
+                        Some(chunk.data_bytes::<16>("SubFormat")?),
+                    ),
+                    other => Err(chunk.field_error(
+                        "cbSize".to_string(),
+                        format!("Invalid fmt extension size: {}", other),
+                    ))?,
+                }
+            } else {
+                (None, None, None)
+            };
+
         Ok(Self {
-            format_tag: chunk
-                .data_bytes(0, 2, "wFormatTag")?
-                .try_into()
-                .expect("Less than 2 bytes returned"),
-            channels: chunk.data_u16(2, "wChannels")?,
-            samples_per_sec: chunk.data_u32(4, "dwSamplesPerSec")?,
-            avg_bytes_per_sec: chunk.data_u32(8, "dwAvgBytesPerSec")?,
-            block_align: chunk.data_u16(12, "wBlockAlign")?,
-            bits_per_sample: chunk.data_u16(14, "wBitsPerSample")?,
+            format_tag,
+            channels,
+            samples_per_sec,
+            avg_bytes_per_sec,
+            block_align,
+            bits_per_sample,
             extension_size,
             valid_bits_per_sample,
             channel_mask,

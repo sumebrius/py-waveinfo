@@ -2,6 +2,7 @@
 name = "pywav"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.77"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
@@ -10,4 +11,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 ascii = "1.1.0"
+bytes = "1.7.1"
 pyo3 = "0.22.0"

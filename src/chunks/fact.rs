@@ -4,14 +4,14 @@ pub struct Fact {
     pub samples: u32,
 }
 
-impl<'a> TryFrom<&'a Chunk<'a>> for Fact {
+impl<'a> TryFrom<Chunk> for Fact {
     type Error = ChunkLoadError;
 
-    fn try_from(chunk: &'a Chunk<'a>) -> Result<Self, Self::Error> {
+    fn try_from(mut chunk: Chunk) -> Result<Self, Self::Error> {
         chunk.validate_type("fact")?;
 
         Ok(Self {
-            samples: chunk.data_u32(0, "dwSampleLength")?,
+            samples: chunk.data_u32("dwSampleLength")?,
         })
     }
 }

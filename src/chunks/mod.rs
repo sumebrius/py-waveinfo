@@ -1,60 +1,52 @@
 use ascii::AsciiString;
+use bytes::{Buf, Bytes};
 use errors::{ChunkLoadError, IncorrectChunkError};
 
 pub mod errors;
 pub mod fact;
 pub mod fmt;
 
-pub struct Chunk<'a> {
+pub struct Chunk {
     pub id: String,
     pub size: usize,
-    pub data: &'a [u8],
+    pub data: Bytes,
 }
 
-impl<'a> Chunk<'a> {
-    fn field_error(
-        &self,
-        field_name: String,
-        position: usize,
-        reason: String,
-    ) -> errors::FieldParseError {
+impl Chunk {
+    fn field_error(&self, field_name: String, reason: String) -> errors::FieldParseError {
         errors::FieldParseError {
             chunk_code: self.id.clone(),
             field_name,
-            position,
+            position: self.size - self.data.remaining(),
             reason,
         }
     }
 
-    pub fn from_data(chunk_data: &'a [u8]) -> Result<Self, errors::ChunkParseError> {
-        let id_bytes = chunk_data.get(0..4).ok_or(errors::ChunkParseError::new(
-            "Invalid chunk code: too short".to_string(),
-        ))?;
-        let id = AsciiString::from_ascii(id_bytes)
+    pub fn pop_from_data(chunk_data: &mut Bytes) -> Result<Self, errors::ChunkParseError> {
+        if chunk_data.len() < 8 {
+            return Err(errors::ChunkParseError::new(
+                "Invalid chunk: too short".to_string(),
+            ));
+        };
+
+        let id = AsciiString::from_ascii(chunk_data.split_to(4))
             .map_err(|err| errors::ChunkParseError::new(format!("Invalid chunk code: {}", err)))?
             .to_string();
 
-        let size_bytes = chunk_data
-            .get(4..8)
-            .ok_or(errors::ChunkParseError::new_with_id(
+        let size = chunk_data.get_u32_le().try_into().map_err(|_| {
+            errors::ChunkParseError::new_with_id(
                 id.clone(),
-                "Invalid size field".to_string(),
-            ))?;
-        let size = u32::from_le_bytes(size_bytes.try_into().unwrap())
-            .try_into()
-            .map_err(|_| {
-                errors::ChunkParseError::new_with_id(
-                    id.clone(),
-                    "Chunk size too big for architecture".to_string(),
-                )
-            })?;
+                "Requested chunk size too big for architecture".to_string(),
+            )
+        })?;
+        if size > chunk_data.len() {
+            return Err(errors::ChunkParseError {
+                chunk_code: id.clone(),
+                reason: "Requested chunk size too large".to_string(),
+            });
+        }
 
-        let data = chunk_data
-            .get(8..(8 + size))
-            .ok_or(errors::ChunkParseError::new_with_id(
-                id.clone(),
-                "Data out of range".to_string(),
-            ))?;
+        let data = chunk_data.split_to(size);
 
         Ok(Chunk { id, size, data })
     }
@@ -70,94 +62,90 @@ impl<'a> Chunk<'a> {
         }
     }
 
-    pub fn load_type(&self) -> Result<ChunkType<'a>, ChunkLoadError> {
+    pub fn load_type(self) -> Result<ChunkType, ChunkLoadError> {
         Ok(match self.id.as_str() {
-            "fmt " => ChunkType::Fmt(&self.try_into()?),
-            "fact" => ChunkType::Fact(&self.try_into()?),
+            "fmt " => ChunkType::Fmt(self.try_into()?),
+            "fact" => ChunkType::Fact(self.try_into()?),
             "data" => ChunkType::Data(self),
             _ => ChunkType::Unknown(self),
         })
     }
 
-    pub fn iter_chunks(&self) -> ChunkIterator {
-        ChunkIterator {
-            parent: self,
-            cursor: 0,
+    fn validate_field_length(
+        &self,
+        len: usize,
+        field_name: &str,
+    ) -> Result<(), errors::FieldParseError> {
+        match self.data.remaining() >= len {
+            true => Ok(()),
+            false => Err(self.field_error(
+                field_name.into(),
+                format!(
+                    "{} bytes expected, {} left remaining in chunk.",
+                    len,
+                    self.data.remaining()
+                ),
+            )),
         }
     }
 
-    pub fn data_bytes(
-        &self,
-        offset: usize,
-        len: usize,
+    pub fn data_bytes<const N: usize>(
+        &mut self,
         field_name: &str,
-    ) -> Result<&[u8], errors::FieldParseError> {
-        self.data.get(offset..offset + len).ok_or(self.field_error(
-            field_name.into(),
-            offset,
-            "Too short field".to_string(),
-        ))
+    ) -> Result<[u8; N], errors::FieldParseError> {
+        self.validate_field_length(N, field_name)?;
+        Ok(*self
+            .data
+            .first_chunk::<N>()
+            .expect("Chunk length already verified"))
     }
 
-    pub fn data_string(
-        &self,
-        offset: usize,
-        len: usize,
+    pub fn data_string<const N: usize>(
+        &mut self,
         field_name: &str,
     ) -> Result<String, errors::FieldParseError> {
-        let bytes = self.data_bytes(offset, len, field_name)?;
-        Ok(AsciiString::from_ascii(bytes)
-            .map_err(|err| self.field_error(field_name.into(), offset, err.to_string()))?
-            .to_string())
+        let chunk_code = self.id.to_owned();
+        let position = self.size - self.data.len();
+
+        match AsciiString::from_ascii(self.data_bytes::<N>(field_name)?) {
+            Ok(data) => Ok(data.to_string()),
+            Err(err) => Err(errors::FieldParseError {
+                chunk_code,
+                field_name: field_name.to_string(),
+                position,
+                reason: err.to_string(),
+            }),
+        }
     }
 
-    pub fn data_u16(
-        &self,
-        offset: usize,
-        field_name: &str,
-    ) -> Result<u16, errors::FieldParseError> {
-        let bytes: [u8; 2] = self
-            .data_bytes(offset, 2, field_name)?
-            .try_into()
-            .expect("Less than 2 bytes returned");
-        Ok(u16::from_le_bytes(bytes))
+    pub fn data_u16(&mut self, field_name: &str) -> Result<u16, errors::FieldParseError> {
+        self.validate_field_length(2, field_name)?;
+        Ok(self.data.get_u16_le())
     }
 
-    pub fn data_u32(
-        &self,
-        offset: usize,
-        field_name: &str,
-    ) -> Result<u32, errors::FieldParseError> {
-        let bytes: [u8; 4] = self
-            .data_bytes(offset, 4, field_name)?
-            .try_into()
-            .expect("Less than 4 bytes returned");
-        Ok(u32::from_le_bytes(bytes))
+    pub fn data_u32(&mut self, field_name: &str) -> Result<u32, errors::FieldParseError> {
+        self.validate_field_length(4, field_name)?;
+        Ok(self.data.get_u32_le())
     }
 }
 
-pub enum ChunkType<'a> {
-    Fmt(&'a fmt::Fmt),
-    Fact(&'a fact::Fact),
-    Data(&'a Chunk<'a>),
-    Unknown(&'a Chunk<'a>),
+pub enum ChunkType {
+    Fmt(fmt::Fmt),
+    Fact(fact::Fact),
+    Data(Chunk),
+    Unknown(Chunk),
 }
 
-struct ChunkIterator<'a> {
-    parent: &'a Chunk<'a>,
-    cursor: usize,
-}
-
-impl<'a> Iterator for ChunkIterator<'a> {
-    type Item = Result<ChunkType<'a>, ChunkLoadError>;
+impl Iterator for Chunk {
+    type Item = Result<ChunkType, ChunkLoadError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.cursor >= self.parent.size {
+        if self.data.is_empty() {
             return None;
         }
 
-        let next_chunk: Result<Chunk, ChunkLoadError> =
-            Chunk::from_data(&(self.parent.data)[self.cursor..]).map_err(|_| {
+        let next_chunk: Result<Chunk, ChunkLoadError> = Chunk::pop_from_data(&mut self.data)
+            .map_err(|_| {
                 IncorrectChunkError {
                     expected_chunk_code: "Container chunk".to_string(),
                     actual_chunk_code: "Non-container chunk".to_string(),
@@ -165,15 +153,6 @@ impl<'a> Iterator for ChunkIterator<'a> {
                 .into()
             });
 
-        let typed_next_chunk = next_chunk.map_or_else(Err, |chunk| chunk.load_type());
-
-        match typed_next_chunk {
-            Ok(_) => {
-                self.cursor += next_chunk.expect("Ok branch").size;
-            }
-            Err(_) => self.cursor = self.parent.size,
-        }
-
-        Some(typed_next_chunk)
+        Some(next_chunk.map_or_else(Err, |chunk| chunk.load_type()))
     }
 }
