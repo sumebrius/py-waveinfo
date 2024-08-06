@@ -1,5 +1,6 @@
 use super::{errors::ChunkLoadError, Chunk};
 
+#[derive(Debug)]
 pub struct Fmt {
     pub format_tag: [u8; 2],
     pub channels: u16,

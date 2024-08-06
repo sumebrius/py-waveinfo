@@ -1,5 +1,6 @@
 use super::{errors::ChunkLoadError, Chunk};
 
+#[derive(Debug)]
 pub struct Fact {
     pub samples: u32,
 }

@@ -6,6 +6,7 @@ pub mod errors;
 pub mod fact;
 pub mod fmt;
 
+#[derive(Debug)]
 pub struct Chunk {
     pub id: String,
     pub size: usize,
@@ -135,6 +136,7 @@ impl Chunk {
     }
 }
 
+#[derive(Debug)]
 pub enum ChunkType {
     Fmt(fmt::Fmt),
     Fact(fact::Fact),
