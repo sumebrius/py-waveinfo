@@ -115,7 +115,11 @@ pub enum ChunkLoadError {
 
 impl From<ChunkLoadError> for PyErr {
     fn from(value: ChunkLoadError) -> Self {
-        value.into()
+        match value {
+            ChunkLoadError::ChunkParseError(err) => err.into(),
+            ChunkLoadError::IncorrectChunkError(err) => err.into(),
+            ChunkLoadError::FieldParseError(err) => err.into(),
+        }
     }
 }
 
