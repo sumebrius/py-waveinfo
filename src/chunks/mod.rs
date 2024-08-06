@@ -22,6 +22,12 @@ impl Chunk {
         }
     }
 
+    pub fn fatal_field_error(&self, field_name: &str, reason: String) -> errors::FatalError {
+        errors::FatalError {
+            inner: self.field_error(field_name.to_string(), reason).into(),
+        }
+    }
+
     pub fn pop_from_data(chunk_data: &mut Bytes) -> Result<Self, errors::ChunkParseError> {
         if chunk_data.len() < 8 {
             return Err(errors::ChunkParseError::new(

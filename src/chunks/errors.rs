@@ -1,7 +1,7 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::PyErr;
 use std::error::Error;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 pub trait ChunkError: Into<PyErr> + Error {}
 
@@ -108,6 +108,7 @@ impl ChunkError for IncorrectChunkError {}
 
 #[derive(Debug)]
 pub enum ChunkLoadError {
+    ChunkParseError(ChunkParseError),
     IncorrectChunkError(IncorrectChunkError),
     FieldParseError(FieldParseError),
 }
@@ -115,6 +116,12 @@ pub enum ChunkLoadError {
 impl From<ChunkLoadError> for PyErr {
     fn from(value: ChunkLoadError) -> Self {
         value.into()
+    }
+}
+
+impl From<ChunkParseError> for ChunkLoadError {
+    fn from(value: ChunkParseError) -> Self {
+        Self::ChunkParseError(value)
     }
 }
 
@@ -129,3 +136,58 @@ impl From<FieldParseError> for ChunkLoadError {
         Self::FieldParseError(value)
     }
 }
+
+#[derive(Debug)]
+pub struct FatalError {
+    pub(crate) inner: ChunkLoadError,
+}
+
+impl Display for FatalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl From<FatalError> for PyErr {
+    fn from(value: FatalError) -> Self {
+        value.inner.into()
+    }
+}
+
+impl From<ChunkLoadError> for FatalError {
+    fn from(value: ChunkLoadError) -> Self {
+        Self { inner: value }
+    }
+}
+
+impl From<ChunkParseError> for FatalError {
+    fn from(value: ChunkParseError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl From<IncorrectChunkError> for FatalError {
+    fn from(value: IncorrectChunkError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl From<FieldParseError> for FatalError {
+    fn from(value: FieldParseError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl Error for FatalError {}
+impl ChunkError for FatalError {}
+
+// pub fn map_fatal(err: impl ChunkError) -> FatalError {
+// let inner = ChunkLoadError::from(err);
+// FatalError::from(err.into())
+// }
