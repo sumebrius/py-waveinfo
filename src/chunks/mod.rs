@@ -101,10 +101,14 @@ impl Chunk {
         field_name: &str,
     ) -> Result<[u8; N], errors::FieldParseError> {
         self.validate_field_length(N, field_name)?;
-        Ok(*self
-            .data
-            .first_chunk::<N>()
-            .expect("Chunk length already verified"))
+        let popped_chunk = {
+            *self
+                .data
+                .first_chunk::<N>()
+                .expect("Chunk length already verified")
+        };
+        self.data.advance(N);
+        Ok(popped_chunk)
     }
 
     pub fn data_string<const N: usize>(
