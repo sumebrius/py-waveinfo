@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 use std::path::PathBuf;
 
+pub mod detail;
 pub mod wave;
 
 #[derive(FromPyObject)]

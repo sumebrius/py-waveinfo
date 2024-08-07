@@ -2,21 +2,23 @@ use bytes::Bytes;
 use pyo3::prelude::*;
 use std::fs::read;
 
-use crate::chunks::{
-    errors::{ChunkParseError, FatalError, IncorrectChunkError},
-    Chunk, ChunkType,
-};
 use crate::formats::Format;
+use crate::{
+    chunks::{
+        errors::{ChunkParseError, FatalError, IncorrectChunkError},
+        Chunk, ChunkType,
+    },
+    util::parse_guid,
+};
+
+use super::detail::{RawDetail, WavDetail};
 
 #[pyclass(get_all)]
 pub struct WavFile {
-    format: Format,
-    channels: usize,
-    sample_rate: u32,
-    bit_depth: usize,
-    avg_bitrate: u32,
-    sample_length: usize,
-    // data: Chunk,
+    detail: WavDetail,
+    raw_details: RawDetail,
+    //TODO - add this when we do something with it, otherwise it just takes up memory.
+    // data: Bytes,
 }
 
 #[pymethods]
@@ -116,14 +118,29 @@ impl WavFile {
             8 * data_chunk.size / fmt_chunk.bits_per_sample as usize
         };
 
-        Ok(WavFile {
+        let raw_details = RawDetail {
             format: Format::from_bytes(&fmt_chunk.format_tag),
             channels: fmt_chunk.channels.into(),
-            sample_rate: fmt_chunk.samples_per_sec,
-            bit_depth: fmt_chunk.bits_per_sample.into(),
-            avg_bitrate: fmt_chunk.avg_bytes_per_sec,
-            sample_length,
-            // bytes,
+            sample_rate: fmt_chunk.samples_per_sec.try_into()?,
+            data_rate: fmt_chunk.avg_bytes_per_sec.try_into()?,
+            block_size: fmt_chunk.block_align.into(),
+            sample_depth: fmt_chunk.bits_per_sample.into(),
+            channel_mask: fmt_chunk.channel_mask,
+            subformat: fmt_chunk.sub_format.map(parse_guid),
+            total_samples: sample_length,
+        };
+
+        let detail = WavDetail {
+            format: raw_details.format,
+            duration: raw_details.total_samples / raw_details.sample_rate,
+            channels: raw_details.channels,
+            bit_depth: raw_details.sample_depth,
+            sample_rate: raw_details.sample_rate,
+        };
+
+        Ok(WavFile {
+            detail,
+            raw_details,
         })
     }
 }

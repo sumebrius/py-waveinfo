@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 
 #[pyclass(eq, eq_int, frozen, get_all)]
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Format {
     Pcm,
     IeeeFloat,
