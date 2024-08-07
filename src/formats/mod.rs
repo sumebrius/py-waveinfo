@@ -22,4 +22,8 @@ impl Format {
             _ => Self::Unknown,
         }
     }
+
+    pub fn requires_fact_chunk(&self) -> bool {
+        !matches!(self, Format::Pcm)
+    }
 }
