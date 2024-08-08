@@ -6,11 +6,21 @@ use crate::formats::Format;
 #[derive(Clone)]
 pub struct WavDetail {
     pub format: Format,
-    // TODO - make a PyDuration
-    pub duration: usize,
+    pub duration: f64,
     pub channels: usize,
     pub bit_depth: usize,
     pub sample_rate: usize,
+}
+
+#[pymethods]
+impl WavDetail {
+    #[getter]
+    fn get_duration<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDelta>> {
+        let days = 0;
+        let seconds = self.duration.trunc() as i32;
+        let microseconds = (self.duration.fract() * 1_000_000.0) as i32;
+        PyDelta::new_bound(py, days, seconds, microseconds, true)
+    }
 }
 
 #[pyclass(get_all)]

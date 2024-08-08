@@ -132,7 +132,7 @@ impl WavFile {
 
         let detail = WavDetail {
             format: raw_details.format,
-            duration: raw_details.total_samples / raw_details.sample_rate,
+            duration: raw_details.total_samples as f64 / raw_details.sample_rate as f64,
             channels: raw_details.channels,
             bit_depth: raw_details.sample_depth,
             sample_rate: raw_details.sample_rate,
