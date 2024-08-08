@@ -118,13 +118,18 @@ impl WavFile {
             8 * data_chunk.size / fmt_chunk.bits_per_sample as usize
         };
 
+        let sample_depth = match fmt_chunk.valid_bits_per_sample {
+            Some(bps) => usize::from(bps),
+            None => usize::from(fmt_chunk.bits_per_sample),
+        };
+
         let raw_details = RawDetail {
             format: Format::from_bytes(&fmt_chunk.format_tag),
             channels: fmt_chunk.channels.into(),
             sample_rate: fmt_chunk.samples_per_sec.try_into()?,
             data_rate: fmt_chunk.avg_bytes_per_sec.try_into()?,
             block_size: fmt_chunk.block_align.into(),
-            sample_depth: fmt_chunk.bits_per_sample.into(),
+            sample_depth,
             channel_mask: fmt_chunk.channel_mask,
             subformat: fmt_chunk.sub_format.map(parse_guid),
             total_samples: sample_length,
