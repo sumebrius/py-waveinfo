@@ -5,7 +5,7 @@ pub struct Fact {
     pub samples: u32,
 }
 
-impl<'a> TryFrom<Chunk> for Fact {
+impl TryFrom<Chunk> for Fact {
     type Error = ChunkLoadError;
 
     fn try_from(mut chunk: Chunk) -> Result<Self, Self::Error> {
