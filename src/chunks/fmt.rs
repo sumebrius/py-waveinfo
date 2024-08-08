@@ -14,7 +14,7 @@ pub struct Fmt {
     pub sub_format: Option<[u8; 16]>,
 }
 
-impl<'a> TryFrom<Chunk> for Fmt {
+impl TryFrom<Chunk> for Fmt {
     type Error = ChunkLoadError;
 
     fn try_from(mut chunk: Chunk) -> Result<Self, Self::Error> {
