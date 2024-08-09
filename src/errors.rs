@@ -6,9 +6,9 @@ use std::num::TryFromIntError;
 use crate::exceptions::WavLoadError;
 
 #[derive(Debug)]
-pub struct ChunkParseError {
-    pub(crate) chunk_code: String,
-    pub(crate) reason: String,
+pub(crate) struct ChunkParseError {
+    pub chunk_code: String,
+    pub reason: String,
 }
 
 impl ChunkParseError {
@@ -21,21 +21,21 @@ impl ChunkParseError {
 }
 
 #[derive(Debug)]
-pub struct FieldParseError {
-    pub(crate) chunk_code: String,
-    pub(crate) field_name: String,
-    pub(crate) position: usize,
-    pub(crate) reason: String,
+pub(crate) struct FieldParseError {
+    pub chunk_code: String,
+    pub field_name: String,
+    pub position: usize,
+    pub reason: String,
 }
 
 #[derive(Debug)]
-pub struct IncorrectChunkError {
-    pub(crate) expected_chunk_code: String,
-    pub(crate) actual_chunk_code: String,
+pub(crate) struct IncorrectChunkError {
+    pub expected_chunk_code: String,
+    pub actual_chunk_code: String,
 }
 
 #[derive(Debug)]
-pub enum ChunkError {
+pub(crate) enum ChunkError {
     ChunkParse(ChunkParseError),
     IncorrectChunk(IncorrectChunkError),
     FieldParse(FieldParseError),
@@ -98,8 +98,8 @@ impl From<TryFromIntError> for ChunkError {
 impl Error for ChunkError {}
 
 #[derive(Debug)]
-pub struct FatalError {
-    pub(crate) inner: ChunkError,
+pub(crate) struct FatalError {
+    pub inner: ChunkError,
 }
 
 impl Display for FatalError {

@@ -2,7 +2,7 @@ use super::Chunk;
 use crate::errors::ChunkError;
 
 #[derive(Debug)]
-pub struct Fmt {
+pub(crate) struct Fmt {
     pub format_tag: [u8; 2],
     pub channels: u16,
     pub samples_per_sec: u32,

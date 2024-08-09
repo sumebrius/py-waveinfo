@@ -8,7 +8,7 @@ pub mod fact;
 pub mod fmt;
 
 #[derive(Debug)]
-pub struct Chunk {
+pub(crate) struct Chunk {
     pub id: String,
     pub size: usize,
     pub data: Bytes,
@@ -132,14 +132,6 @@ impl Chunk {
     }
 }
 
-#[derive(Debug)]
-pub enum ChunkType {
-    Fmt(fmt::Fmt),
-    Fact(fact::Fact),
-    Data(Chunk),
-    Unknown(Chunk),
-}
-
 impl Iterator for Chunk {
     type Item = Result<ChunkType, ChunkError>;
 
@@ -159,4 +151,12 @@ impl Iterator for Chunk {
 
         Some(next_chunk.map_or_else(Err, |chunk| chunk.load_type()))
     }
+}
+
+#[derive(Debug)]
+pub enum ChunkType {
+    Fmt(fmt::Fmt),
+    Fact(fact::Fact),
+    Data(Chunk),
+    Unknown(Chunk),
 }

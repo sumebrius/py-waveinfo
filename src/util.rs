@@ -1,4 +1,4 @@
-pub fn parse_guid(bytes: [u8; 16]) -> String {
+pub(crate) fn parse_guid(bytes: [u8; 16]) -> String {
     let chars = bytes
         .iter()
         .map(|b| format!("{:02x}", b))

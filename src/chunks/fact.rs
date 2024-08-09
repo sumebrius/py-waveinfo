@@ -2,7 +2,7 @@ use super::Chunk;
 use crate::errors::ChunkError;
 
 #[derive(Debug)]
-pub struct Fact {
+pub(crate) struct Fact {
     pub samples: u32,
 }
 
