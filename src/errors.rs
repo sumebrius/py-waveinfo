@@ -1,0 +1,147 @@
+use pyo3::PyErr;
+use std::error::Error;
+use std::fmt::{Debug, Display};
+use std::num::TryFromIntError;
+
+use crate::exceptions::WavLoadError;
+
+#[derive(Debug)]
+pub struct ChunkParseError {
+    pub(crate) chunk_code: String,
+    pub(crate) reason: String,
+}
+
+impl ChunkParseError {
+    pub fn new_idless(reason: String) -> Self {
+        Self {
+            chunk_code: "Unknown".to_string(),
+            reason,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FieldParseError {
+    pub(crate) chunk_code: String,
+    pub(crate) field_name: String,
+    pub(crate) position: usize,
+    pub(crate) reason: String,
+}
+
+#[derive(Debug)]
+pub struct IncorrectChunkError {
+    pub(crate) expected_chunk_code: String,
+    pub(crate) actual_chunk_code: String,
+}
+
+#[derive(Debug)]
+pub enum ChunkError {
+    ChunkParse(ChunkParseError),
+    IncorrectChunk(IncorrectChunkError),
+    FieldParse(FieldParseError),
+    TryFromInt(TryFromIntError),
+}
+
+impl Display for ChunkError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ChunkError::ChunkParse(err) => {
+                write!(
+                    f,
+                    "Unable to parse {} chunk: {}",
+                    err.chunk_code, err.reason
+                )
+            }
+            ChunkError::IncorrectChunk(err) => {
+                write!(
+                    f,
+                    "Expected a {} chunk, got a {} chunk",
+                    err.expected_chunk_code, err.actual_chunk_code
+                )
+            }
+            ChunkError::FieldParse(err) => {
+                write!(
+                    f,
+                    "Unable to parse {} chunk field {} byte {}: {}",
+                    err.chunk_code, err.field_name, err.position, err.reason
+                )
+            }
+            ChunkError::TryFromInt(err) => Debug::fmt(&err, f),
+        }
+    }
+}
+
+impl From<ChunkParseError> for ChunkError {
+    fn from(value: ChunkParseError) -> Self {
+        Self::ChunkParse(value)
+    }
+}
+
+impl From<IncorrectChunkError> for ChunkError {
+    fn from(value: IncorrectChunkError) -> Self {
+        Self::IncorrectChunk(value)
+    }
+}
+
+impl From<FieldParseError> for ChunkError {
+    fn from(value: FieldParseError) -> Self {
+        Self::FieldParse(value)
+    }
+}
+
+impl From<TryFromIntError> for ChunkError {
+    fn from(value: TryFromIntError) -> Self {
+        Self::TryFromInt(value)
+    }
+}
+
+impl Error for ChunkError {}
+
+#[derive(Debug)]
+pub struct FatalError {
+    pub(crate) inner: ChunkError,
+}
+
+impl Display for FatalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.inner, f)
+    }
+}
+
+impl From<FatalError> for PyErr {
+    fn from(value: FatalError) -> Self {
+        WavLoadError::new_err(value.to_string())
+    }
+}
+
+impl From<ChunkError> for FatalError {
+    fn from(value: ChunkError) -> Self {
+        Self { inner: value }
+    }
+}
+
+impl From<ChunkParseError> for FatalError {
+    fn from(value: ChunkParseError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl From<IncorrectChunkError> for FatalError {
+    fn from(value: IncorrectChunkError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl From<FieldParseError> for FatalError {
+    fn from(value: FieldParseError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl Error for FatalError {}

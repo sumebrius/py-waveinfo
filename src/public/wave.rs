@@ -2,12 +2,10 @@ use bytes::Bytes;
 use pyo3::prelude::*;
 use std::fs::read;
 
-use crate::formats::Format;
 use crate::{
-    chunks::{
-        errors::{ChunkParseError, FatalError, IncorrectChunkError},
-        Chunk, ChunkType,
-    },
+    chunks::{Chunk, ChunkType},
+    errors::{ChunkParseError, FatalError, IncorrectChunkError},
+    formats::Format,
     util::parse_guid,
 };
 
@@ -52,7 +50,7 @@ impl WavFile {
                 ChunkType::Fmt(chunk) => Some(chunk),
                 _ => None,
             })
-            .ok_or(FatalError::from(ChunkParseError::new(
+            .ok_or(FatalError::from(ChunkParseError::new_idless(
                 "Missing fmt chunk".to_string(),
             )))?;
 
@@ -69,8 +67,8 @@ impl WavFile {
                         ChunkType::Fact(chunk) => Some(chunk),
                         _ => None,
                     })
-                    .ok_or(FatalError::from(ChunkParseError::new(
-                        "Missing fmt chunk".to_string(),
+                    .ok_or(FatalError::from(ChunkParseError::new_idless(
+                        "Missing fact chunk".to_string(),
                     )))?,
             )
         } else {
@@ -107,13 +105,7 @@ impl WavFile {
             fact_chunk
                 .expect("Fact chunk requirement already verified")
                 .samples
-                .try_into()
-                .map_err(|_| {
-                    ChunkParseError::new_with_id(
-                        "data".to_string(),
-                        "Requested chunk size too big for architecture".to_string(),
-                    )
-                })?
+                .try_into()?
         } else {
             8 * data_chunk.size / fmt_chunk.bits_per_sample as usize
         };

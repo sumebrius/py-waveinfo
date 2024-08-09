@@ -1,6 +1,7 @@
 use pyo3::prelude::*;
 
 mod chunks;
+mod errors;
 mod formats;
 mod public;
 mod util;
@@ -8,9 +9,13 @@ mod util;
 use public::*;
 
 #[pymodule]
-fn pywav(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn pywav(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wave::WavFile>()?;
     m.add_class::<detail::WavDetail>()?;
     m.add_class::<detail::RawDetail>()?;
+    m.add(
+        "WavLoadError",
+        py.get_type_bound::<crate::public::exceptions::WavLoadError>(),
+    )?;
     Ok(())
 }

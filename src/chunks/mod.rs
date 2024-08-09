@@ -1,8 +1,9 @@
+use crate::errors::{
+    ChunkError, ChunkParseError, FatalError, FieldParseError, IncorrectChunkError,
+};
 use ascii::AsciiString;
 use bytes::{Buf, Bytes};
-use errors::{ChunkLoadError, IncorrectChunkError};
 
-pub mod errors;
 pub mod fact;
 pub mod fmt;
 
@@ -14,8 +15,8 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    fn field_error(&self, field_name: String, reason: String) -> errors::FieldParseError {
-        errors::FieldParseError {
+    fn field_error(&self, field_name: String, reason: String) -> FieldParseError {
+        FieldParseError {
             chunk_code: self.id.clone(),
             field_name,
             position: self.size - self.data.remaining(),
@@ -23,34 +24,29 @@ impl Chunk {
         }
     }
 
-    pub fn fatal_field_error(&self, field_name: &str, reason: String) -> errors::FatalError {
-        errors::FatalError {
+    pub fn fatal_field_error(&self, field_name: &str, reason: String) -> FatalError {
+        FatalError {
             inner: self.field_error(field_name.to_string(), reason).into(),
         }
     }
 
-    pub fn pop_from_data(chunk_data: &mut Bytes) -> Result<Self, errors::ChunkParseError> {
+    pub fn pop_from_data(chunk_data: &mut Bytes) -> Result<Self, ChunkError> {
         if chunk_data.len() < 8 {
-            return Err(errors::ChunkParseError::new(
+            Err(ChunkParseError::new_idless(
                 "Invalid chunk: too short".to_string(),
-            ));
+            ))?
         };
 
         let id = AsciiString::from_ascii(chunk_data.split_to(4))
-            .map_err(|err| errors::ChunkParseError::new(format!("Invalid chunk code: {}", err)))?
+            .map_err(|err| ChunkParseError::new_idless(format!("Invalid chunk code: {}", err)))?
             .to_string();
 
-        let size = chunk_data.get_u32_le().try_into().map_err(|_| {
-            errors::ChunkParseError::new_with_id(
-                id.clone(),
-                "Requested chunk size too big for architecture".to_string(),
-            )
-        })?;
+        let size = chunk_data.get_u32_le().try_into()?;
         if size > chunk_data.len() {
-            return Err(errors::ChunkParseError {
+            Err(ChunkParseError {
                 chunk_code: id.clone(),
                 reason: "Requested chunk size too large".to_string(),
-            });
+            })?
         }
 
         let data = chunk_data.split_to(size);
@@ -69,7 +65,7 @@ impl Chunk {
         }
     }
 
-    pub fn load_type(self) -> Result<ChunkType, ChunkLoadError> {
+    pub fn load_type(self) -> Result<ChunkType, ChunkError> {
         Ok(match self.id.as_str() {
             "fmt " => ChunkType::Fmt(self.try_into()?),
             "fact" => ChunkType::Fact(self.try_into()?),
@@ -78,11 +74,7 @@ impl Chunk {
         })
     }
 
-    fn validate_field_length(
-        &self,
-        len: usize,
-        field_name: &str,
-    ) -> Result<(), errors::FieldParseError> {
+    fn validate_field_length(&self, len: usize, field_name: &str) -> Result<(), FieldParseError> {
         match self.data.remaining() >= len {
             true => Ok(()),
             false => Err(self.field_error(
@@ -99,7 +91,7 @@ impl Chunk {
     pub fn data_bytes<const N: usize>(
         &mut self,
         field_name: &str,
-    ) -> Result<[u8; N], errors::FieldParseError> {
+    ) -> Result<[u8; N], FieldParseError> {
         self.validate_field_length(N, field_name)?;
         let popped_chunk = {
             *self
@@ -114,13 +106,13 @@ impl Chunk {
     pub fn data_string<const N: usize>(
         &mut self,
         field_name: &str,
-    ) -> Result<String, errors::FieldParseError> {
+    ) -> Result<String, FieldParseError> {
         let chunk_code = self.id.to_owned();
         let position = self.size - self.data.len();
 
         match AsciiString::from_ascii(self.data_bytes::<N>(field_name)?) {
             Ok(data) => Ok(data.to_string()),
-            Err(err) => Err(errors::FieldParseError {
+            Err(err) => Err(FieldParseError {
                 chunk_code,
                 field_name: field_name.to_string(),
                 position,
@@ -129,12 +121,12 @@ impl Chunk {
         }
     }
 
-    pub fn data_u16(&mut self, field_name: &str) -> Result<u16, errors::FieldParseError> {
+    pub fn data_u16(&mut self, field_name: &str) -> Result<u16, FieldParseError> {
         self.validate_field_length(2, field_name)?;
         Ok(self.data.get_u16_le())
     }
 
-    pub fn data_u32(&mut self, field_name: &str) -> Result<u32, errors::FieldParseError> {
+    pub fn data_u32(&mut self, field_name: &str) -> Result<u32, FieldParseError> {
         self.validate_field_length(4, field_name)?;
         Ok(self.data.get_u32_le())
     }
@@ -149,15 +141,15 @@ pub enum ChunkType {
 }
 
 impl Iterator for Chunk {
-    type Item = Result<ChunkType, ChunkLoadError>;
+    type Item = Result<ChunkType, ChunkError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.data.is_empty() {
             return None;
         }
 
-        let next_chunk: Result<Chunk, ChunkLoadError> = Chunk::pop_from_data(&mut self.data)
-            .map_err(|_| {
+        let next_chunk: Result<Chunk, ChunkError> =
+            Chunk::pop_from_data(&mut self.data).map_err(|_| {
                 IncorrectChunkError {
                     expected_chunk_code: "Container chunk".to_string(),
                     actual_chunk_code: "Non-container chunk".to_string(),

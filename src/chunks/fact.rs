@@ -1,4 +1,5 @@
-use super::{errors::ChunkLoadError, Chunk};
+use super::Chunk;
+use crate::errors::ChunkError;
 
 #[derive(Debug)]
 pub struct Fact {
@@ -6,7 +7,7 @@ pub struct Fact {
 }
 
 impl TryFrom<Chunk> for Fact {
-    type Error = ChunkLoadError;
+    type Error = ChunkError;
 
     fn try_from(mut chunk: Chunk) -> Result<Self, Self::Error> {
         chunk.validate_type("fact")?;
