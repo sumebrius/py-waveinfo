@@ -153,5 +153,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: *.whl
+          merge-multiple: true
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
