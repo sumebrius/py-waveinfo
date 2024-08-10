@@ -9,7 +9,7 @@ mod util;
 use public::*;
 
 #[pymodule]
-fn pywav(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn waveinfo(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<wave::WavFile>()?;
     m.add_class::<detail::WavDetail>()?;
     m.add_class::<detail::RawDetail>()?;

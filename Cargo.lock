@@ -138,15 +138,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pywav"
-version = "0.1.0"
-dependencies = [
- "ascii",
- "bytes",
- "pyo3",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -183,3 +174,12 @@ name = "unindent"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7de7d73e1754487cb58364ee906a499937a0dfabd86bcb980fa99ec8c8fa2ce"
+
+[[package]]
+name = "waveinfo"
+version = "0.1.0"
+dependencies = [
+ "ascii",
+ "bytes",
+ "pyo3",
+]
