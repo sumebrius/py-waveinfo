@@ -5,6 +5,8 @@ pub mod detail;
 pub mod exceptions;
 pub mod wave;
 
+pub use crate::formats::Format;
+
 #[derive(FromPyObject)]
 enum ConstructorArg {
     Bytes(Vec<u8>),
