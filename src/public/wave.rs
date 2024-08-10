@@ -11,7 +11,7 @@ use crate::{
 
 use super::detail::{RawDetail, WavDetail};
 
-#[pyclass(get_all)]
+#[pyclass(get_all, module = "waveinfo")]
 pub struct WavFile {
     detail: WavDetail,
     raw_details: RawDetail,

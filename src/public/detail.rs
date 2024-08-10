@@ -2,7 +2,7 @@ use pyo3::{prelude::*, types::PyDelta};
 
 use crate::formats::Format;
 
-#[pyclass(get_all)]
+#[pyclass(get_all, module = "waveinfo")]
 #[derive(Clone)]
 pub struct WavDetail {
     pub format: Format,
@@ -23,7 +23,7 @@ impl WavDetail {
     }
 }
 
-#[pyclass(get_all)]
+#[pyclass(get_all, module = "waveinfo")]
 #[derive(Clone)]
 pub struct RawDetail {
     pub format: Format,
