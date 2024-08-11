@@ -1,14 +1,7 @@
 use num_enum::TryFromPrimitive;
 use pyo3::prelude::*;
 
-#[pyclass(
-    eq,
-    eq_int,
-    frozen,
-    get_all,
-    rename_all = "SCREAMING_SNAKE_CASE",
-    module = "waveinfo"
-)]
+#[pyclass(eq, eq_int, frozen, get_all, module = "waveinfo")]
 #[derive(PartialEq, Clone, Copy, TryFromPrimitive)]
 #[repr(u16)]
 #[allow(clippy::upper_case_acronyms, non_camel_case_types)]
