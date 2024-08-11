@@ -4,12 +4,23 @@ build-backend = "maturin"
 
 [project]
 name = "waveinfo"
+description = "A package to read wave audio files and expose details of their contents."
+authors = [{ name = "Bruce Cutler" }]
+readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 3 - Alpha",
 ]
+keywords = ["wave", "wav", "audio"]
 dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/sumebrius/py-waveinfo"
+Repository = "https://github.com/sumebrius/py-waveinfo"
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
