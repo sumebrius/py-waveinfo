@@ -26,7 +26,7 @@ impl WavDetail {
 #[pyclass(get_all, module = "waveinfo")]
 #[derive(Clone)]
 pub struct RawDetail {
-    pub format: Format,
+    pub format_tag: usize,
     pub channels: usize,
     pub sample_rate: usize,
     pub data_rate: usize,

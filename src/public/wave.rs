@@ -116,7 +116,7 @@ impl WavFile {
         };
 
         let raw_details = RawDetail {
-            format: Format::from_bytes(&fmt_chunk.format_tag),
+            format_tag: u16::from_le_bytes(fmt_chunk.format_tag) as usize,
             channels: fmt_chunk.channels.into(),
             sample_rate: fmt_chunk.samples_per_sec.try_into()?,
             data_rate: fmt_chunk.avg_bytes_per_sec.try_into()?,
@@ -128,7 +128,7 @@ impl WavFile {
         };
 
         let detail = WavDetail {
-            format: raw_details.format,
+            format: Format::from_bytes(&fmt_chunk.format_tag),
             duration: raw_details.total_samples as f64 / raw_details.sample_rate as f64,
             channels: raw_details.channels,
             bit_depth: raw_details.sample_depth,
