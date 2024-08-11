@@ -9,6 +9,7 @@ pub(crate) struct Fmt {
     pub avg_bytes_per_sec: u32,
     pub block_align: u16,
     pub bits_per_sample: u16,
+    #[allow(dead_code)] // Part of the spec
     pub extension_size: Option<u16>,
     pub valid_bits_per_sample: Option<u16>,
     pub channel_mask: Option<u32>,

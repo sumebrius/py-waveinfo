@@ -158,5 +158,6 @@ pub enum ChunkType {
     Fmt(fmt::Fmt),
     Fact(fact::Fact),
     Data(Chunk),
+    #[allow(dead_code)] // This will be read in future
     Unknown(Chunk),
 }
