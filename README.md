@@ -20,17 +20,19 @@ datetime.timedelta(seconds=42)
 44100
 ```
 
-A `WavFile` may be initialised by passing (currently) either a path-like pointing to the file to be read, or a bytes object containing the contents of a valid wav file.
+A `WavFile` may be initialised by passing any of:
+
+- A string or path-like object pointing at the file to be read
+- A file-like object (eg. `io.BytesIO`) containing the file
+- A bytes object containing the raw bytes of the file
 
 If a non-valid wave file is provided, a `WavLoadError` exception will be raised.
 
 ## Roadmap
 
-- Allow initialisation with a file object
 - Expose additional, optional data about the file:
   - Channel mask
   - Playlist/Cue detail
   - Additional metadata
 - Actual documentation
-- Expand list of known codecs
 - Provide methods to return the audio data, both as raw data and decoded PCM (where possible)
