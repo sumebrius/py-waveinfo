@@ -6,7 +6,7 @@ use crate::{
     chunks::{Chunk, ChunkType},
     errors::{ChunkParseError, FatalError, IncorrectChunkError},
     formats::Format,
-    util::parse_guid,
+    util::{parse_guid, read_from_filelike},
 };
 
 use super::detail::{RawDetail, WavDetail};
@@ -26,6 +26,7 @@ impl WavFile {
         let mut bytes: Bytes = match file {
             super::ConstructorArg::Bytes(bytes) => bytes,
             super::ConstructorArg::Path(path) => read(path)?,
+            super::ConstructorArg::File(filelike) => read_from_filelike(filelike)?,
         }
         .into();
 

@@ -8,8 +8,9 @@ pub mod wave;
 pub use crate::formats::Format;
 
 #[derive(FromPyObject)]
-enum ConstructorArg {
+enum ConstructorArg<'py> {
     Bytes(Vec<u8>),
     Path(PathBuf),
+    File(Bound<'py, PyAny>),
     // TODO - Accept a `read`able file
 }
