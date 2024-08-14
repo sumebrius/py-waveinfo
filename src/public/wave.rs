@@ -36,10 +36,7 @@ impl WavFile {
         };
 
         let fmt_chunk = riff_chunk
-            .next()
-            .transpose()
-            .ok()
-            .flatten()
+            .next_ok()
             .and_then(|chunktype| match chunktype {
                 ChunkType::Fmt(chunk) => Some(chunk),
                 _ => None,
@@ -52,10 +49,7 @@ impl WavFile {
         let fact_chunk = if file_format.requires_fact_chunk() {
             Some(
                 riff_chunk
-                    .next()
-                    .transpose()
-                    .ok()
-                    .flatten()
+                    .next_ok()
                     .and_then(|chunktype| match chunktype {
                         ChunkType::Fact(chunk) => Some(chunk),
                         _ => None,

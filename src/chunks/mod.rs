@@ -130,6 +130,11 @@ impl Chunk {
         self.validate_field_length(4, field_name)?;
         Ok(self.data.get_u32_le())
     }
+
+    /// Like `next`, but unwraps an error result to None
+    pub fn next_ok(&mut self) -> Option<ChunkType> {
+        self.next().transpose().ok().flatten()
+    }
 }
 
 impl Iterator for Chunk {
