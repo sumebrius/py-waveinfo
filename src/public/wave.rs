@@ -13,7 +13,6 @@ use super::detail::{RawDetail, WavDetail};
 
 #[pyclass(get_all, module = "waveinfo")]
 pub struct WavFile {
-    detail: WavDetail,
     raw_details: RawDetail,
     //TODO - add this when we do something with it, otherwise it just takes up memory.
     // data: Bytes,
@@ -55,7 +54,8 @@ impl WavFile {
                 "Missing fmt chunk".to_string(),
             )))?;
 
-        let file_format = Format::from_bytes(&fmt_chunk.format_tag);
+        let format_tag = u16::from_le_bytes(fmt_chunk.format_tag);
+        let file_format = Format::from_tag(format_tag);
 
         let fact_chunk = if file_format.requires_fact_chunk() {
             Some(
@@ -117,7 +117,7 @@ impl WavFile {
         };
 
         let raw_details = RawDetail {
-            format_tag: u16::from_le_bytes(fmt_chunk.format_tag) as usize,
+            format_tag,
             channels: fmt_chunk.channels.into(),
             sample_rate: fmt_chunk.samples_per_sec.try_into()?,
             data_rate: fmt_chunk.avg_bytes_per_sec.try_into()?,
@@ -128,17 +128,11 @@ impl WavFile {
             total_samples: sample_length,
         };
 
-        let detail = WavDetail {
-            format: Format::from_bytes(&fmt_chunk.format_tag),
-            duration: raw_details.total_samples as f64 / raw_details.sample_rate as f64,
-            channels: raw_details.channels,
-            bit_depth: raw_details.sample_depth,
-            sample_rate: raw_details.sample_rate,
-        };
+        Ok(WavFile { raw_details })
+    }
 
-        Ok(WavFile {
-            detail,
-            raw_details,
-        })
+    #[getter]
+    fn detail(&self) -> WavDetail {
+        WavDetail::from(&self.raw_details)
     }
 }

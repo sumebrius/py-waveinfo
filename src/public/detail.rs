@@ -23,10 +23,22 @@ impl WavDetail {
     }
 }
 
+impl From<&RawDetail> for WavDetail {
+    fn from(value: &RawDetail) -> Self {
+        WavDetail {
+            format: Format::from_tag(value.format_tag),
+            duration: value.total_samples as f64 / value.sample_rate as f64,
+            channels: value.channels,
+            bit_depth: value.sample_depth,
+            sample_rate: value.sample_rate,
+        }
+    }
+}
+
 #[pyclass(get_all, module = "waveinfo")]
 #[derive(Clone)]
 pub struct RawDetail {
-    pub format_tag: usize,
+    pub format_tag: u16,
     pub channels: usize,
     pub sample_rate: usize,
     pub data_rate: usize,
