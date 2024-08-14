@@ -1,12 +1,11 @@
 use bytes::Bytes;
 use pyo3::prelude::*;
-use std::fs::read;
 
 use crate::{
     chunks::{Chunk, ChunkType},
     errors::{ChunkParseError, FatalError, IncorrectChunkError},
     formats::Format,
-    util::{parse_guid, read_from_filelike},
+    util::parse_guid,
 };
 
 use super::detail::{RawDetail, WavDetail};
@@ -22,12 +21,7 @@ pub struct WavFile {
 impl WavFile {
     #[new]
     fn new(file: super::ConstructorArg) -> PyResult<Self> {
-        let mut bytes: Bytes = match file {
-            super::ConstructorArg::Bytes(bytes) => bytes,
-            super::ConstructorArg::Path(path) => read(path)?,
-            super::ConstructorArg::File(filelike) => read_from_filelike(filelike)?,
-        }
-        .into();
+        let mut bytes: Bytes = file.try_into()?;
 
         let mut riff_chunk = Chunk::pop_from_data(&mut bytes).map_err(FatalError::from)?;
 
