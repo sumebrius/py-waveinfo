@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 
 use crate::{
     chunks::{Chunk, ChunkType},
-    errors::{ChunkParseError, FatalError, IncorrectChunkError},
+    errors::{FatalError, IncorrectChunkError, MissingChunkError},
     formats::Format,
     util::parse_guid,
 };
@@ -44,9 +44,7 @@ impl WavFile {
                 ChunkType::Fmt(chunk) => Some(chunk),
                 _ => None,
             })
-            .ok_or(FatalError::from(ChunkParseError::new_idless(
-                "Missing fmt chunk".to_string(),
-            )))?;
+            .ok_or(FatalError::from(MissingChunkError::new("fmt")))?;
 
         let format_tag = u16::from_le_bytes(fmt_chunk.format_tag);
         let file_format = Format::from_tag(format_tag);
@@ -62,9 +60,7 @@ impl WavFile {
                         ChunkType::Fact(chunk) => Some(chunk),
                         _ => None,
                     })
-                    .ok_or(FatalError::from(ChunkParseError::new_idless(
-                        "Missing fact chunk".to_string(),
-                    )))?,
+                    .ok_or(FatalError::from(MissingChunkError::new("fact")))?,
             )
         } else {
             None
@@ -89,10 +85,7 @@ impl WavFile {
                         }
                     }
                 }
-                None => Err(FatalError::from(IncorrectChunkError {
-                    expected_chunk_code: "data".to_string(),
-                    actual_chunk_code: "".to_string(),
-                }))?,
+                None => Err(FatalError::from(MissingChunkError::new("data")))?,
             }
         };
 

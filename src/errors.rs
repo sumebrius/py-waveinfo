@@ -35,9 +35,23 @@ pub(crate) struct IncorrectChunkError {
 }
 
 #[derive(Debug)]
+pub(crate) struct MissingChunkError {
+    pub expected_chunk_code: String,
+}
+
+impl MissingChunkError {
+    pub fn new(chunk: &str) -> Self {
+        Self {
+            expected_chunk_code: chunk.to_string(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub(crate) enum ChunkError {
     ChunkParse(ChunkParseError),
     IncorrectChunk(IncorrectChunkError),
+    MissingChunk(MissingChunkError),
     FieldParse(FieldParseError),
     TryFromInt(TryFromIntError),
 }
@@ -58,6 +72,9 @@ impl Display for ChunkError {
                     "Expected a {} chunk, got a {} chunk",
                     err.expected_chunk_code, err.actual_chunk_code
                 )
+            }
+            ChunkError::MissingChunk(err) => {
+                write!(f, "No {} chunk found", err.expected_chunk_code)
             }
             ChunkError::FieldParse(err) => {
                 write!(
@@ -80,6 +97,12 @@ impl From<ChunkParseError> for ChunkError {
 impl From<IncorrectChunkError> for ChunkError {
     fn from(value: IncorrectChunkError) -> Self {
         Self::IncorrectChunk(value)
+    }
+}
+
+impl From<MissingChunkError> for ChunkError {
+    fn from(value: MissingChunkError) -> Self {
+        Self::MissingChunk(value)
     }
 }
 
@@ -130,6 +153,14 @@ impl From<ChunkParseError> for FatalError {
 
 impl From<IncorrectChunkError> for FatalError {
     fn from(value: IncorrectChunkError) -> Self {
+        Self {
+            inner: value.into(),
+        }
+    }
+}
+
+impl From<MissingChunkError> for FatalError {
+    fn from(value: MissingChunkError) -> Self {
         Self {
             inner: value.into(),
         }
