@@ -28,3 +28,6 @@ impl<'py> TryFrom<ConstructorArg<'py>> for Bytes {
         .into())
     }
 }
+
+#[cfg(test)]
+mod tests;

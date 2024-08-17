@@ -3,7 +3,7 @@ use pyo3::{prelude::*, types::PyDelta};
 use crate::formats::Format;
 
 #[pyclass(get_all, module = "waveinfo")]
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct WavDetail {
     pub format: Format,
     pub duration: f64,
