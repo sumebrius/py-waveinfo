@@ -15,6 +15,7 @@ pub(crate) struct Chunk {
 }
 
 impl Chunk {
+    /// Raise a field error referencing the current chunk and cursor position
     fn field_error(&self, field_name: String, reason: String) -> FieldParseError {
         FieldParseError {
             chunk_code: self.id.clone(),
@@ -24,12 +25,14 @@ impl Chunk {
         }
     }
 
+    /// Raise a fatal field error referencing the current chunk and cursor position
     pub fn fatal_field_error(&self, field_name: &str, reason: String) -> FatalError {
         FatalError {
             inner: self.field_error(field_name.to_string(), reason).into(),
         }
     }
 
+    /// Pop a chunk from the beginning of a Bytes
     pub fn pop_from_data(chunk_data: &mut Bytes) -> Result<Self, ChunkError> {
         if chunk_data.len() < 8 {
             Err(ChunkParseError::new_idless(
@@ -54,6 +57,7 @@ impl Chunk {
         Ok(Chunk { id, size, data })
     }
 
+    /// Return an error if not the expected chunk type
     pub fn validate_type(&self, expected_type: &str) -> Result<(), IncorrectChunkError> {
         if expected_type == self.id {
             Ok(())
@@ -65,6 +69,7 @@ impl Chunk {
         }
     }
 
+    /// Turn this into a typed chunk
     pub fn load_type(self) -> Result<ChunkType, ChunkError> {
         Ok(match self.id.as_str() {
             "fmt " => ChunkType::Fmt(self.try_into()?),
@@ -74,6 +79,7 @@ impl Chunk {
         })
     }
 
+    /// Bytes get_* methods panic if there's not enough bytes for the type. Check this is satisfied first.
     fn validate_field_length(&self, len: usize, field_name: &str) -> Result<(), FieldParseError> {
         match self.data.remaining() >= len {
             true => Ok(()),
@@ -88,6 +94,7 @@ impl Chunk {
         }
     }
 
+    /// Pop N bytes from the beginning of a chunk
     pub fn data_bytes<const N: usize>(
         &mut self,
         field_name: &str,
@@ -103,6 +110,7 @@ impl Chunk {
         Ok(popped_chunk)
     }
 
+    /// Pop N length string from beginning of a chunk
     pub fn data_string<const N: usize>(
         &mut self,
         field_name: &str,
@@ -140,6 +148,7 @@ impl Chunk {
 impl Iterator for Chunk {
     type Item = Result<ChunkType, ChunkError>;
 
+    /// Iterate chunks from a list-like chunk
     fn next(&mut self) -> Option<Self::Item> {
         if self.data.is_empty() {
             return None;
@@ -166,3 +175,6 @@ pub enum ChunkType {
     #[allow(dead_code)] // This will be read in future
     Unknown(Chunk),
 }
+
+#[cfg(test)]
+mod tests;
