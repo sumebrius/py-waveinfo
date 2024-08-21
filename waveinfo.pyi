@@ -24,7 +24,12 @@ class RawDetail:
 
 class Format:
     """
-    Enum of wav file formats (codecs)
+    Enum of wav file formats (codecs).
+    """
+
+class SpeakerPosition:
+    """
+    Enum of speaker positions.
     """
 
 class WavLoadError(Exception):

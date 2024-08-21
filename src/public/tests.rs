@@ -1,3 +1,4 @@
+use detail::SpeakerPosition;
 use pyo3::types::PyDict;
 
 use super::*;
@@ -50,6 +51,7 @@ fn test_detail_duration_getter() {
         channels: 1,
         bit_depth: 8,
         sample_rate: 44100,
+        channel_positions: vec![detail::SpeakerPosition::FRONT_LEFT],
     };
 
     pyo3::prepare_freethreaded_python();
@@ -96,6 +98,49 @@ fn test_detail_converter() {
         channels: 2,
         bit_depth: 8,
         sample_rate: 44100,
+        channel_positions: vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::FRONT_RIGHT,
+        ],
     };
     assert_eq!(expected, (&raw).into());
+}
+
+#[test]
+fn test_speaker_mask() {
+    assert_eq!(
+        SpeakerPosition::from_mask(None, 2),
+        vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::FRONT_RIGHT,
+        ]
+    );
+    assert_eq!(
+        SpeakerPosition::from_mask(Some(0x00000003), 2),
+        vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::FRONT_RIGHT,
+        ]
+    );
+    assert_eq!(
+        SpeakerPosition::from_mask(Some(0x00000030), 2),
+        vec![
+            detail::SpeakerPosition::BACK_LEFT,
+            detail::SpeakerPosition::BACK_RIGHT,
+        ]
+    );
+    assert_eq!(
+        SpeakerPosition::from_mask(Some(0x00000803), 2),
+        vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::FRONT_RIGHT,
+        ]
+    );
+    assert_eq!(
+        SpeakerPosition::from_mask(Some(0x00000001), 2),
+        vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::RESERVED,
+        ]
+    );
 }
