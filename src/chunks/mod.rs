@@ -54,6 +54,11 @@ impl Chunk {
 
         let data = chunk_data.split_to(size);
 
+        // Chunks are always 2-byte aligned with a possible padding byte
+        if (size & 1) == 1 {
+            chunk_data.advance(1)
+        }
+
         Ok(Chunk { id, size, data })
     }
 

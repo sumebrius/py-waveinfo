@@ -27,6 +27,17 @@ fn test_pop_from_data() {
 }
 
 #[test]
+fn test_pop_with_padding_byte() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x54, 0x45, 0x53, 0x54, 0x03, 0x00, 0x00, 0x00, 0x44, 0x41, 0x54, 0x00, 0x42, 0x41, 0x54,
+    ]);
+    let chunk = Chunk::pop_from_data(&mut chunk_data).unwrap();
+    assert_eq!(chunk.size, 3);
+    assert_eq!(chunk.data, Bytes::from_static(&[0x44, 0x41, 0x54]));
+    assert_eq!(chunk_data, Bytes::from_static(&[0x42, 0x41, 0x54]));
+}
+
+#[test]
 fn test_data_bytes() {
     let mut chunk = Chunk {
         id: "".to_string(),
