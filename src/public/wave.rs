@@ -35,7 +35,9 @@ impl WavFile {
             Err(riff_chunk.fatal_field_error("WAVEID", "Incorrect RIFF type".to_string()))?
         };
 
-        let fmt_chunk = riff_chunk
+        let mut riff_chunks = riff_chunk.typed_iter();
+
+        let fmt_chunk = riff_chunks
             .next_ok()
             .and_then(|chunktype| match chunktype {
                 ChunkType::Fmt(chunk) => Some(chunk),
@@ -48,7 +50,7 @@ impl WavFile {
 
         let fact_chunk = if file_format.requires_fact_chunk() {
             Some(
-                riff_chunk
+                riff_chunks
                     .next_ok()
                     .and_then(|chunktype| match chunktype {
                         ChunkType::Fact(chunk) => Some(chunk),
@@ -61,7 +63,7 @@ impl WavFile {
         };
 
         let data_chunk = loop {
-            match riff_chunk.next() {
+            match riff_chunks.next() {
                 Some(result) => {
                     if let Ok(chunktype) = result {
                         match chunktype {

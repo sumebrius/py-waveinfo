@@ -139,14 +139,13 @@ impl Chunk {
         Ok(self.data.get_u32_le())
     }
 
-    /// Like `next`, but unwraps an error result to None
-    pub fn next_ok(&mut self) -> Option<ChunkType> {
-        self.next().transpose().ok().flatten()
+    pub fn typed_iter(self) -> ChunkTypeIter {
+        ChunkTypeIter { chunk: self }
     }
 }
 
 impl Iterator for Chunk {
-    type Item = Result<ChunkType, ChunkError>;
+    type Item = Result<Self, ChunkError>;
 
     /// Iterate chunks from a list-like chunk
     fn next(&mut self) -> Option<Self::Item> {
@@ -163,7 +162,29 @@ impl Iterator for Chunk {
                 .into()
             });
 
-        Some(next_chunk.map_or_else(Err, |chunk| chunk.load_type()))
+        Some(next_chunk)
+    }
+}
+
+// A Chunk Iterator that returns ChunkTypes
+pub(crate) struct ChunkTypeIter {
+    chunk: Chunk,
+}
+
+impl Iterator for ChunkTypeIter {
+    type Item = Result<ChunkType, ChunkError>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.chunk
+            .next()
+            .map(|res| res.map_or_else(Err, |chunk| chunk.load_type()))
+    }
+}
+
+impl ChunkTypeIter {
+    /// Like `next`, but unwraps an error result to None
+    pub fn next_ok(&mut self) -> Option<ChunkType> {
+        self.next().transpose().ok().flatten()
     }
 }
 
