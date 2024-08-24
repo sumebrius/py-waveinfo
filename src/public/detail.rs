@@ -5,6 +5,8 @@ use strum_macros::EnumIter;
 
 use crate::formats::Format;
 
+use super::wave::WavFile;
+
 #[pyclass(get_all, module = "waveinfo")]
 #[derive(Clone, Debug, PartialEq)]
 pub struct WavDetail {
@@ -18,6 +20,12 @@ pub struct WavDetail {
 
 #[pymethods]
 impl WavDetail {
+    #[new]
+    fn new(file: super::ConstructorArg) -> PyResult<Self> {
+        let wavfile = WavFile::rs_new(file)?;
+        Ok((&wavfile.raw_details).into())
+    }
+
     #[getter]
     fn get_duration<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDelta>> {
         let days = 0;
@@ -52,6 +60,15 @@ pub struct RawDetail {
     pub channel_mask: Option<u32>,
     pub subformat: Option<String>,
     pub total_samples: usize,
+}
+
+#[pymethods]
+impl RawDetail {
+    #[new]
+    fn new(file: super::ConstructorArg) -> PyResult<Self> {
+        let wavfile = WavFile::rs_new(file)?;
+        Ok(wavfile.raw_details)
+    }
 }
 
 #[pyclass(eq, eq_int, frozen, get_all, module = "waveinfo")]

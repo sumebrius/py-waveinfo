@@ -14,7 +14,7 @@ use super::detail::{RawDetail, WavDetail};
 
 #[pyclass(get_all, module = "waveinfo")]
 pub struct WavFile {
-    raw_details: RawDetail,
+    pub raw_details: RawDetail,
     info: HashMap<String, String>,
     //TODO - add this when we do something with it, otherwise it just takes up memory.
     // data: Bytes,
@@ -24,6 +24,17 @@ pub struct WavFile {
 impl WavFile {
     #[new]
     fn new(file: super::ConstructorArg) -> PyResult<Self> {
+        Self::rs_new(file)
+    }
+
+    #[getter]
+    fn detail(&self) -> WavDetail {
+        WavDetail::from(&self.raw_details)
+    }
+}
+
+impl WavFile {
+    pub(super) fn rs_new(file: super::ConstructorArg) -> PyResult<Self> {
         let mut bytes: Bytes = file.try_into()?;
 
         let mut riff_chunk = Chunk::pop_from_data(&mut bytes).map_err(FatalError::from)?;
@@ -123,10 +134,5 @@ impl WavFile {
         };
 
         Ok(WavFile { raw_details, info })
-    }
-
-    #[getter]
-    fn detail(&self) -> WavDetail {
-        WavDetail::from(&self.raw_details)
     }
 }
