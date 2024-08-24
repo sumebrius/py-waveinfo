@@ -134,6 +134,36 @@ impl Chunk {
         }
     }
 
+    /// Pop a null-terminated string from beginning of a chunk
+    pub fn data_zstring(&mut self, field_name: &str) -> Result<String, FieldParseError> {
+        let str_bytes = self
+            .data
+            .clone()
+            .into_iter()
+            .take_while(|x| *x != 0)
+            .collect::<Vec<u8>>();
+        if str_bytes.len() >= self.data.remaining() {
+            return Err(FieldParseError {
+                chunk_code: self.id.to_owned(),
+                field_name: field_name.to_string(),
+                position: self.size - self.data.len(),
+                reason: "String not null terminated".to_string(),
+            });
+        };
+        let str_res = std::str::from_utf8(&str_bytes)
+            .map(|s| s.to_string())
+            .map_err(|e| FieldParseError {
+                chunk_code: self.id.to_owned(),
+                field_name: field_name.to_string(),
+                position: self.size - self.data.len(),
+                reason: e.to_string(),
+            });
+        if str_res.is_ok() {
+            self.data.advance(str_bytes.len() + 1)
+        };
+        str_res
+    }
+
     pub fn data_u16(&mut self, field_name: &str) -> Result<u16, FieldParseError> {
         self.validate_field_length(2, field_name)?;
         Ok(self.data.get_u16_le())

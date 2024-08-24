@@ -49,3 +49,17 @@ fn test_data_bytes() {
     assert_eq!(chunk.data, Bytes::from_static(b"DATA"));
     assert!(chunk.data_bytes::<8>("").is_err());
 }
+
+#[test]
+fn test_pop_zstring() {
+    let mut chunk = Chunk {
+        id: "".to_string(),
+        size: 8,
+        data: Bytes::from_static(&[0x54, 0x45, 0x53, 0x54, 0x00, 0x44, 0x41, 0x54, 0x41]),
+    };
+
+    assert_eq!(chunk.data_zstring("test").unwrap(), "TEST".to_string());
+    assert_eq!(chunk.data, Bytes::from_static(&[0x44, 0x41, 0x54, 0x41]));
+    assert!(chunk.data_zstring("test").is_err());
+}
+
