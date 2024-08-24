@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bytes::Bytes;
 use pyo3::prelude::*;
 
@@ -13,6 +15,7 @@ use super::detail::{RawDetail, WavDetail};
 #[pyclass(get_all, module = "waveinfo")]
 pub struct WavFile {
     raw_details: RawDetail,
+    info: HashMap<String, String>,
     //TODO - add this when we do something with it, otherwise it just takes up memory.
     // data: Bytes,
 }
@@ -62,6 +65,8 @@ impl WavFile {
             None
         };
 
+        let mut info = HashMap::<String, String>::new();
+
         let data_chunk = loop {
             match riff_chunks.next() {
                 Some(result) => {
@@ -76,7 +81,12 @@ impl WavFile {
                                 expected_chunk_code: "Any metadata".to_string(),
                                 actual_chunk_code: "fact".to_string(),
                             }))?,
-                            ChunkType::List(_chunk) => todo!(),
+                            ChunkType::List(chunk) => {
+                                let hm: Result<HashMap<String, String>, _> = chunk.try_into();
+                                if let Ok(hm) = hm {
+                                    info = hm;
+                                }
+                            }
                             //TODO - handle optional metadata chunks that may appear before data chunk
                             ChunkType::Unknown(_) => (),
                         }
@@ -112,7 +122,7 @@ impl WavFile {
             total_samples: sample_length,
         };
 
-        Ok(WavFile { raw_details })
+        Ok(WavFile { raw_details, info })
     }
 
     #[getter]
