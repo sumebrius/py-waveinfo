@@ -14,7 +14,7 @@ Format.PCM
 datetime.timedelta(seconds=42)
 >>> wav.detail.channels
 1
->>> wav.details.bit_depth
+>>> wav.detail.bit_depth
 16
 >>> wav.detail.sample_rate
 44100
