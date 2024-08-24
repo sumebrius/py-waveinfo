@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bytes::Bytes;
 
 use super::*;
@@ -63,3 +65,26 @@ fn test_pop_zstring() {
     assert!(chunk.data_zstring("test").is_err());
 }
 
+#[test]
+fn test_info_list() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x4c, 0x49, 0x53, 0x54, 0x1a, 0x0, 0x0, 0x0, 0x49, 0x4e, 0x46, 0x4f, 0x49, 0x53, 0x46,
+        0x54, 0xd, 0x0, 0x0, 0x0, 0x4c, 0x61, 0x76, 0x66, 0x36, 0x31, 0x2e, 0x31, 0x2e, 0x31, 0x30,
+        0x30, 0x0, 0x0,
+    ]);
+    let chunk = Chunk::pop_from_data(&mut chunk_data)
+        .unwrap()
+        .load_type()
+        .unwrap();
+    match chunk {
+        ChunkType::List(list_chunk) => {
+            let chunk_hashmap: Result<HashMap<String, String>, _> = list_chunk.try_into();
+            assert!(chunk_hashmap.is_ok());
+            assert_eq!(
+                chunk_hashmap.unwrap(),
+                HashMap::from([("Software".to_string(), "Lavf61.1.100".to_string())])
+            );
+        }
+        _ => panic!("Not an Info chunk: {:?}", chunk),
+    }
+}

@@ -6,6 +6,7 @@ use bytes::{Buf, Bytes};
 
 pub mod fact;
 pub mod fmt;
+pub mod list;
 
 #[derive(Debug)]
 pub(crate) struct Chunk {
@@ -80,6 +81,7 @@ impl Chunk {
             "fmt " => ChunkType::Fmt(self.try_into()?),
             "fact" => ChunkType::Fact(self.try_into()?),
             "data" => ChunkType::Data(self),
+            "LIST" => ChunkType::List(self.try_into()?),
             _ => ChunkType::Unknown(self),
         })
     }
@@ -228,6 +230,7 @@ pub enum ChunkType {
     Fmt(fmt::Fmt),
     Fact(fact::Fact),
     Data(Chunk),
+    List(list::List),
     #[allow(dead_code)] // This will be read in future
     Unknown(Chunk),
 }

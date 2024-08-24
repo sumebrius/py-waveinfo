@@ -68,8 +68,6 @@ impl WavFile {
                     if let Ok(chunktype) = result {
                         match chunktype {
                             ChunkType::Data(chunk) => break chunk,
-                            //TODO - handle optional metadata chunks that may appear before data chunk
-                            ChunkType::Unknown(_) => (),
                             ChunkType::Fmt(_) => Err(FatalError::from(IncorrectChunkError {
                                 expected_chunk_code: "Any metadata".to_string(),
                                 actual_chunk_code: "fmt".to_string(),
@@ -78,6 +76,9 @@ impl WavFile {
                                 expected_chunk_code: "Any metadata".to_string(),
                                 actual_chunk_code: "fact".to_string(),
                             }))?,
+                            ChunkType::List(_chunk) => todo!(),
+                            //TODO - handle optional metadata chunks that may appear before data chunk
+                            ChunkType::Unknown(_) => (),
                         }
                     }
                 }
