@@ -113,7 +113,8 @@ impl WavFile {
                 .samples
                 .try_into()?
         } else {
-            8 * data_chunk.size / fmt_chunk.bits_per_sample as usize
+            (8 * data_chunk.size)
+                / (fmt_chunk.bits_per_sample as usize * fmt_chunk.channels as usize)
         };
 
         let sample_depth = match fmt_chunk.valid_bits_per_sample {
