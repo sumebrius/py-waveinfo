@@ -1,30 +1,87 @@
-from enum import Enum
 from os import PathLike
-from typing import Union
+from typing import BinaryIO, Optional, Union
 
 class WavFile:
     """
-    A wav file.
+    Representation of a wave file
 
-    Args:
-        file: Either a path to a file to read in, or the raw bytes of the file.
+    Parameters:
+        file: A path to a file to read in, the file itself, or the raw bytes of the file.
+
+    Raises:
+        WavLoadError: If the file is unable to be parsed
+
+    Attributes:
+        detail: Details about the wave file
+        info: Optional metadata embedded in the file
+        raw_details: Details about the file directly extracted from it
     """
 
-    def __init__(self, file: Union[str, PathLike, bytes]) -> None: ...
+    def __init__(self, file: Union[str, PathLike, BinaryIO, bytes]) -> None: ...
+
+    detail: WavDetail
+    raw_details: RawDetail
+    info: dict[str, str]
 
 class WavDetail:
     """
-    Information about a wav file.
+    Details about the wav file audio
+
+    Parameters:
+        file: A path to a file to read in, the file itself, or the raw bytes of the file.
+
+    Attributes:
+        format: The format/codec of the audio
+        duration: Duration of the audio
+        channels: Number of audio channels
+        bit_depth: The bit depth (amplitude resolution) of the audio
+        sample_rate: The audio sample rate in Hz
+        channel_positions: Ordered list of the speaker positions of each channel
     """
+
+    def __init__(self, file: Union[str, PathLike, BinaryIO, bytes]) -> None: ...
+
+    format: Format
+    duration: float
+    channels: int
+    bit_depth: int
+    sample_rate: int
+    channel_positions: list[SpeakerPosition]
 
 class RawDetail:
     """
     Raw details about a wave file.
+
+    Parameters:
+        file: A path to a file to read in, the file itself, or the raw bytes of the file.
+
+    Attributes:
+        format_tag: Format tag code
+        channels: Number of channels
+        sample_rate: Sample rate in Hz
+        data_rate: Average bit rate
+        block_size: Internal data alignment of audio
+        sample_depth: Valid bits per sample
+        channel_mask: Channel speaker poisition mask
+        subformat: Subformat GUID
+        total_samples: Total number of samples (per channel) in file. From fact chunk if present, otherwise calculated from data chunk length
     """
+
+    def __init__(self, file: Union[str, PathLike, BinaryIO, bytes]) -> None: ...
+
+    format_tag: int
+    channels: int
+    sample_rate: int
+    data_rate: int
+    block_size: int
+    sample_depth: int
+    channel_mask: Optional[int]
+    subformat: Optional[str]
+    total_samples: int
 
 class Format:
     """
-    Enum of wav file formats (codecs).
+    Enum of wav file formats (codecs) as defined in [RFC2361](https://datatracker.ietf.org/doc/html/rfc2361)
     """
 
     UNKNOWN = 0x0000
