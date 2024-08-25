@@ -2,8 +2,10 @@ site_name: waveinfo
 theme: readthedocs
 
 repo_url: https://github.com/sumebrius/py-waveinfo
+site_url: https://py-waveinfo.readthedocs.io
 
 plugins:
+  - search
   - mkdocstrings:
       default_handler: python
       handlers:

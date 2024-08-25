@@ -19,7 +19,7 @@ keywords = ["wave", "wav", "audio"]
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/sumebrius/py-waveinfo"
+Homepage = "https://py-waveinfo.readthedocs.io"
 Repository = "https://github.com/sumebrius/py-waveinfo"
 
 [tool.maturin]
