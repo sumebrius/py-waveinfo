@@ -24,3 +24,6 @@ Repository = "https://github.com/sumebrius/py-waveinfo"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
+
+[project.optional-dependencies]
+docs = ["mkdocs", "mkdocstrings[python]"]
