@@ -1,0 +1,26 @@
+site_name: waveinfo
+theme: readthedocs
+
+repo_url: https://github.com/sumebrius/py-waveinfo
+
+plugins:
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_root_full_path: false
+            show_source: false
+            separate_signature: true
+            members_order: "source"
+            show_labels: false
+            show_category_heading: true
+            merge_init_into_class: true
+            docstring_options:
+              ignore_init_summary: true
+
+nav:
+  - wavefile: "index.md"
+  - Reference: "ref_objects.md"
+  - Categories Reference: "ref_enums.md"
