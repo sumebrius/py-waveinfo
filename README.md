@@ -30,9 +30,5 @@ If a non-valid wave file is provided, a `WavLoadError` exception will be raised.
 
 ## Roadmap
 
-- Expose additional, optional data about the file:
-  - Channel mask
-  - Playlist/Cue detail
-  - Additional metadata
-- Actual documentation
 - Provide methods to return the audio data, both as raw data and decoded PCM (where possible)
+- Expose detail on playlists and cues
