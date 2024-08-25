@@ -26,3 +26,4 @@ nav:
   - wavefile: "index.md"
   - Reference: "ref_objects.md"
   - Categories Reference: "ref_enums.md"
+  - Changelog: "changelog.md"
