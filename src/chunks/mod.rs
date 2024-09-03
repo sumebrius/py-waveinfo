@@ -8,7 +8,7 @@ pub mod fact;
 pub mod fmt;
 pub mod list;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Chunk {
     pub id: String,
     pub size: usize,
@@ -225,7 +225,7 @@ impl ChunkTypeIter {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ChunkType {
     Fmt(fmt::Fmt),
     Fact(fact::Fact),

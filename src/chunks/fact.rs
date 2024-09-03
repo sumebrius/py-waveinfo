@@ -1,7 +1,7 @@
 use super::Chunk;
 use crate::errors::ChunkError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Fact {
     pub samples: u32,
 }

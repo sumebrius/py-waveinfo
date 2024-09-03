@@ -6,7 +6,7 @@ use strum_macros::{EnumMessage, EnumString};
 use super::Chunk;
 use crate::errors::ChunkError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct List {
     list_type: String,
     subchunks: Vec<Chunk>,

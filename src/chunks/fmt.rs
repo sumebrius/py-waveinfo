@@ -1,7 +1,7 @@
 use super::Chunk;
 use crate::errors::ChunkError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Fmt {
     pub format_tag: [u8; 2],
     pub channels: u16,
