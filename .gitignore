@@ -41,6 +41,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+lcov.info
 
 # Translations
 *.mo
@@ -70,3 +71,6 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+# cargo config
+.cargo
