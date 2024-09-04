@@ -5,7 +5,7 @@ use std::num::TryFromIntError;
 
 use crate::exceptions::WavLoadError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct ChunkParseError {
     pub chunk_code: String,
     pub reason: String,
@@ -20,7 +20,7 @@ impl ChunkParseError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct FieldParseError {
     pub chunk_code: String,
     pub field_name: String,
@@ -28,13 +28,13 @@ pub(crate) struct FieldParseError {
     pub reason: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct IncorrectChunkError {
     pub expected_chunk_code: String,
     pub actual_chunk_code: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct MissingChunkError {
     pub expected_chunk_code: String,
 }
@@ -47,7 +47,7 @@ impl MissingChunkError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) enum ChunkError {
     ChunkParse(ChunkParseError),
     IncorrectChunk(IncorrectChunkError),
