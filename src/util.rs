@@ -36,7 +36,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_guid() {
+    fn guid_parser() {
         let uuid_bytes = 193453761000446423301720482639943054353u128.to_be_bytes();
         assert_eq!(
             "9189d6d0-56ec-49d0-b97d-e56c35983411".to_string(),
@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_filelike_ok() {
+    fn read_filelike_ok() {
         pyo3::prepare_freethreaded_python();
         Python::with_gil(|py| {
             let locals = PyDict::new_bound(py);
@@ -65,7 +65,7 @@ filelike = io.BytesIO(b'test')"#,
     }
 
     #[test]
-    fn test_read_filelike_bad_object() {
+    fn read_filelike_bad_object() {
         pyo3::prepare_freethreaded_python();
         Python::with_gil(|py| {
             let filelike = py.eval_bound("{b'test'}", None, None).unwrap();

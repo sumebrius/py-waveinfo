@@ -4,7 +4,7 @@ use pyo3::types::PyDict;
 use super::*;
 
 #[test]
-fn test_constructor() {
+fn constructor() {
     pyo3::prepare_freethreaded_python();
     Python::with_gil(|py| {
         let locals = PyDict::new_bound(py);
@@ -44,7 +44,7 @@ file_arg = BytesIO(bytes_arg)"#,
 }
 
 #[test]
-fn test_detail_duration_getter() {
+fn detail_duration_getter() {
     let wav_detail = detail::WavDetail {
         format: crate::formats::Format::UNKNOWN,
         duration: 42.6,
@@ -80,7 +80,7 @@ res = detail_obj.duration == timedelta(seconds=42.6)"#,
 }
 
 #[test]
-fn test_detail_converter() {
+fn detail_converter() {
     let raw = detail::RawDetail {
         format_tag: 0x0006,
         channels: 2,
@@ -107,7 +107,7 @@ fn test_detail_converter() {
 }
 
 #[test]
-fn test_speaker_mask() {
+fn speaker_mask() {
     assert_eq!(
         SpeakerPosition::from_mask(None, 2),
         vec![
