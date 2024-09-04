@@ -66,6 +66,139 @@ fn test_pop_zstring() {
 }
 
 #[test]
+fn test_to_fact_chunk() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x66, 0x61, 0x63, 0x74, 0x04, 0x00, 0x00, 0x00, 0x21, 0x96, 0x00, 0x00,
+    ]);
+    let chunk = Chunk::pop_from_data(&mut chunk_data)
+        .unwrap()
+        .load_type()
+        .unwrap();
+    let expected_chunk = ChunkType::Fact(fact::Fact { samples: 0x9621 });
+    assert_eq!(chunk, expected_chunk);
+}
+
+#[test]
+fn test_to_std_fmt_chunk() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x66, 0x6d, 0x74, 0x20, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0xee, 0x02,
+        0x00, 0x00, 0xb8, 0x0b, 0x00, 0x04, 0x00, 0x10, 0x00,
+    ]);
+    let chunk = Chunk::pop_from_data(&mut chunk_data)
+        .unwrap()
+        .load_type()
+        .unwrap();
+    let expected_chunk = ChunkType::Fmt(fmt::Fmt {
+        format_tag: [0x01, 0x00],
+        channels: 2,
+        samples_per_sec: 192000,
+        avg_bytes_per_sec: 768000,
+        block_align: 4,
+        bits_per_sample: 16,
+        extension_size: None,
+        valid_bits_per_sample: None,
+        channel_mask: None,
+        sub_format: None,
+    });
+    assert_eq!(chunk, expected_chunk);
+}
+
+#[test]
+fn test_to_ex_fmt_chunk() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x66, 0x6d, 0x74, 0x20, 0x12, 0x00, 0x00, 0x00, 0x06, 0x00, 0x02, 0x00, 0x44, 0xac, 0x00,
+        0x00, 0x88, 0x58, 0x01, 0x00, 0x02, 0x00, 0x08, 0x00, 0x00, 0x00,
+    ]);
+    let chunk = Chunk::pop_from_data(&mut chunk_data)
+        .unwrap()
+        .load_type()
+        .unwrap();
+    let expected_chunk = ChunkType::Fmt(fmt::Fmt {
+        format_tag: [0x06, 0x00],
+        channels: 2,
+        samples_per_sec: 44100,
+        avg_bytes_per_sec: 88200,
+        block_align: 2,
+        bits_per_sample: 8,
+        extension_size: Some(0),
+        valid_bits_per_sample: None,
+        channel_mask: None,
+        sub_format: None,
+    });
+    assert_eq!(chunk, expected_chunk);
+}
+
+#[test]
+fn test_to_extensible_fmt_chunk() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x66, 0x6d, 0x74, 0x20, 0x28, 0x00, 0x00, 0x00, 0xfe, 0xff, 0x02, 0x00, 0x00, 0xee, 0x02,
+        0x00, 0x00, 0xdc, 0x05, 0x00, 0x02, 0x00, 0x08, 0x00, 0x16, 0x00, 0x08, 0x00, 0x03, 0x00,
+        0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00,
+        0x38, 0x9b, 0x71,
+    ]);
+    let chunk = Chunk::pop_from_data(&mut chunk_data)
+        .unwrap()
+        .load_type()
+        .unwrap();
+    let expected_chunk = ChunkType::Fmt(fmt::Fmt {
+        format_tag: [0xFE, 0xFF],
+        channels: 2,
+        samples_per_sec: 192000,
+        avg_bytes_per_sec: 384000,
+        block_align: 2,
+        bits_per_sample: 8,
+        extension_size: Some(22),
+        valid_bits_per_sample: Some(8),
+        channel_mask: Some(3),
+        sub_format: Some([
+            0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38,
+            0x9b, 0x71,
+        ]),
+    });
+    assert_eq!(chunk, expected_chunk);
+}
+
+#[test]
+fn test_bad_fmt_ext_chunk() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x66, 0x6d, 0x74, 0x20, 0x16, 0x00, 0x00, 0x00, 0x06, 0x00, 0x02, 0x00, 0x44, 0xac, 0x00,
+        0x00, 0x88, 0x58, 0x01, 0x00, 0x02, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00,
+    ]);
+    assert_eq!(
+        Chunk::pop_from_data(&mut chunk_data)
+            .unwrap()
+            .load_type()
+            .unwrap_err(),
+        ChunkError::FieldParse(FieldParseError {
+            chunk_code: "fmt ".to_string(),
+            field_name: "cbSize".to_string(),
+            position: 18,
+            reason: "Extension size mismatch. Reported: 0. Found: 4".to_string(),
+        })
+    );
+}
+
+#[test]
+fn test_invalid_fmt_ext_chunk() {
+    let mut chunk_data = Bytes::from_static(&[
+        0x66, 0x6d, 0x74, 0x20, 0x16, 0x00, 0x00, 0x00, 0x06, 0x00, 0x02, 0x00, 0x44, 0xac, 0x00,
+        0x00, 0x88, 0x58, 0x01, 0x00, 0x02, 0x00, 0x08, 0x00, 0x04, 0x00, 0x08, 0x00, 0x00, 0x00,
+    ]);
+    assert_eq!(
+        Chunk::pop_from_data(&mut chunk_data)
+            .unwrap()
+            .load_type()
+            .unwrap_err(),
+        ChunkError::FieldParse(FieldParseError {
+            chunk_code: "fmt ".to_string(),
+            field_name: "cbSize".to_string(),
+            position: 18,
+            reason: "Invalid fmt extension size: 4".to_string(),
+        })
+    );
+}
+
+#[test]
 fn test_info_list() {
     let mut chunk_data = Bytes::from_static(&[
         0x4c, 0x49, 0x53, 0x54, 0x1a, 0x0, 0x0, 0x0, 0x49, 0x4e, 0x46, 0x4f, 0x49, 0x53, 0x46,
