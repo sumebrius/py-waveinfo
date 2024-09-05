@@ -58,7 +58,7 @@ pub struct RawDetail {
     pub block_size: usize,
     pub sample_depth: usize,
     pub channel_mask: Option<u32>,
-    pub subformat: Option<String>,
+    pub subformat: Option<[u8; 16]>,
     pub total_samples: usize,
 }
 
@@ -68,6 +68,11 @@ impl RawDetail {
     fn new(file: super::ConstructorArg) -> PyResult<Self> {
         let wavfile = WavFile::rs_new(file)?;
         Ok(wavfile.raw_details)
+    }
+
+    #[getter]
+    fn get_subformat(&self) -> PyResult<Option<String>> {
+        Ok(self.subformat.map(parse_guid))
     }
 }
 

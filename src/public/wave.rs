@@ -7,7 +7,6 @@ use crate::{
     chunks::{Chunk, ChunkType},
     errors::{FatalError, IncorrectChunkError, MissingChunkError},
     formats::Format,
-    util::parse_guid,
 };
 
 use super::detail::{RawDetail, WavDetail};
@@ -130,7 +129,7 @@ impl WavFile {
             block_size: fmt_chunk.block_align.into(),
             sample_depth,
             channel_mask: fmt_chunk.channel_mask,
-            subformat: fmt_chunk.sub_format.map(parse_guid),
+            subformat: fmt_chunk.sub_format,
             total_samples: sample_length,
         };
 
