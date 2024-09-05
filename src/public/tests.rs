@@ -146,6 +146,13 @@ fn speaker_mask() {
         ]
     );
     assert_eq!(
+        SpeakerPosition::from_mask(Some(0), 2),
+        vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::FRONT_RIGHT,
+        ]
+    );
+    assert_eq!(
         SpeakerPosition::from_mask(Some(0x00000003), 2),
         vec![
             detail::SpeakerPosition::FRONT_LEFT,

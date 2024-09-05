@@ -126,7 +126,12 @@ pub enum SpeakerPosition {
 
 impl SpeakerPosition {
     pub(crate) fn from_mask(mask: Option<u32>, channels: usize) -> Vec<Self> {
-        let mask = mask.unwrap_or(0xFFFF);
+        const ALL_POSITIONS: u32 = 0xFFFFFFFF;
+        let mask = match mask.unwrap_or(ALL_POSITIONS) {
+            0 => ALL_POSITIONS,
+            mask => mask,
+        };
+
         let mut positions: Vec<Self> = Vec::with_capacity(channels);
 
         for position in Self::iter() {
