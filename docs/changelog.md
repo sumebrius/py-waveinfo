@@ -1,5 +1,12 @@
 # Changelog
 
+## 2024-09-05 - v0.3.1
+
+### Bugfixes
+
+- Correctly extract codec from files with an extensible fmt chunk and well-known subformat GUID
+- Correctly set speaker positions if channel mask isn't set in an extensible fmt chunk
+
 ## 2024-08-25 - v0.3.0
 
 ### Features
