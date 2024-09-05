@@ -3,7 +3,7 @@ use pyo3::{prelude::*, types::PyDelta};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::formats::Format;
+use crate::{formats::Format, util::parse_guid};
 
 use super::wave::WavFile;
 
@@ -37,8 +37,30 @@ impl WavDetail {
 
 impl From<&RawDetail> for WavDetail {
     fn from(value: &RawDetail) -> Self {
+        let format = match Format::from_tag(value.format_tag) {
+            Format::EXTENSIBLE => match value.subformat {
+                Some(guid) => {
+                    let (fmt_bytes, magic_str) = guid.split_at(2);
+                    if magic_str
+                        == [
+                            0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38,
+                            0x9B, 0x71,
+                        ]
+                    {
+                        Format::from_tag(u16::from_le_bytes(
+                            fmt_bytes.try_into().expect("Byte length already validated"),
+                        ))
+                    } else {
+                        Format::UNKNOWN
+                    }
+                }
+                None => Format::UNKNOWN,
+            },
+            other => other,
+        };
+
         WavDetail {
-            format: Format::from_tag(value.format_tag),
+            format,
             duration: value.total_samples as f64 / value.sample_rate as f64,
             channels: value.channels,
             bit_depth: value.sample_depth,
