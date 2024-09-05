@@ -2,6 +2,10 @@
 
 `waveinfo` is a python package to read wave audio files and expose details of their contents.
 
+## Documentation
+
+Hosted on [Read the Docs](https://py-waveinfo.readthedocs.io/en/stable).
+
 ## Usage
 
 ```pycon
