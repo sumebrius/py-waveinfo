@@ -107,6 +107,36 @@ fn detail_converter() {
 }
 
 #[test]
+fn ext_detail_converter() {
+    let raw = detail::RawDetail {
+        format_tag: 0xFFFE,
+        channels: 2,
+        sample_rate: 192000,
+        data_rate: 384000,
+        block_size: 2,
+        sample_depth: 8,
+        channel_mask: Some(0),
+        subformat: Some([
+            0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38,
+            0x9b, 0x71,
+        ]),
+        total_samples: 1921920,
+    };
+    let expected = detail::WavDetail {
+        format: crate::formats::Format::ALAW,
+        duration: 10.01,
+        channels: 2,
+        bit_depth: 8,
+        sample_rate: 192000,
+        channel_positions: vec![
+            detail::SpeakerPosition::FRONT_LEFT,
+            detail::SpeakerPosition::FRONT_RIGHT,
+        ],
+    };
+    assert_eq!(expected, (&raw).into());
+}
+
+#[test]
 fn speaker_mask() {
     assert_eq!(
         SpeakerPosition::from_mask(None, 2),
