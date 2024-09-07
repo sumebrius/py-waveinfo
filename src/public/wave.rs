@@ -87,11 +87,12 @@ impl WavFile {
             }
         };
 
-        let sample_length: usize = if let Some(chunk) = fact_chunk {
-            chunk.samples.try_into()?
-        } else {
-            (8 * data_chunk.size)
-                / (fmt_chunk.bits_per_sample as usize * fmt_chunk.channels as usize)
+        let sample_length: usize = match fact_chunk {
+            Some(chunk) => chunk.samples.try_into()?,
+            None => {
+                (8 * data_chunk.size)
+                    / (fmt_chunk.bits_per_sample as usize * fmt_chunk.channels as usize)
+            }
         };
 
         let sample_depth = match fmt_chunk.valid_bits_per_sample {
