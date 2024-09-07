@@ -1,5 +1,11 @@
 # Changelog
 
+## 2024-09-07 - v0.3.2
+
+### Bugfixes
+
+- Account for fact chunk possibly missing in any file.
+
 ## 2024-09-05 - v0.3.1
 
 ### Bugfixes
