@@ -4,9 +4,8 @@ use bytes::Bytes;
 use pyo3::prelude::*;
 
 use crate::{
-    chunks::{Chunk, ChunkType},
+    chunks::{fact::Fact, Chunk, ChunkType},
     errors::{FatalError, IncorrectChunkError, MissingChunkError},
-    formats::Format,
 };
 
 use super::detail::{RawDetail, WavDetail};
@@ -59,23 +58,7 @@ impl WavFile {
             })
             .ok_or(FatalError::from(MissingChunkError::new("fmt")))?;
 
-        let format_tag = u16::from_le_bytes(fmt_chunk.format_tag);
-        let file_format = Format::from_tag(format_tag);
-
-        let fact_chunk = if file_format.requires_fact_chunk() {
-            Some(
-                riff_chunks
-                    .next_ok()
-                    .and_then(|chunktype| match chunktype {
-                        ChunkType::Fact(chunk) => Some(chunk),
-                        _ => None,
-                    })
-                    .ok_or(FatalError::from(MissingChunkError::new("fact")))?,
-            )
-        } else {
-            None
-        };
-
+        let mut fact_chunk: Option<Fact> = None;
         let mut info = HashMap::<String, String>::new();
 
         let data_chunk = loop {
@@ -85,13 +68,10 @@ impl WavFile {
                         match chunktype {
                             ChunkType::Data(chunk) => break chunk,
                             ChunkType::Fmt(_) => Err(FatalError::from(IncorrectChunkError {
-                                expected_chunk_code: "Any metadata".to_string(),
+                                expected_chunk_code: "Non-fmt".to_string(),
                                 actual_chunk_code: "fmt".to_string(),
                             }))?,
-                            ChunkType::Fact(_) => Err(FatalError::from(IncorrectChunkError {
-                                expected_chunk_code: "Any metadata".to_string(),
-                                actual_chunk_code: "fact".to_string(),
-                            }))?,
+                            ChunkType::Fact(chunk) => fact_chunk = Some(chunk),
                             ChunkType::List(chunk) => {
                                 let hm: Result<HashMap<String, String>, _> = chunk.try_into();
                                 if let Ok(hm) = hm {
@@ -107,11 +87,8 @@ impl WavFile {
             }
         };
 
-        let sample_length: usize = if file_format.requires_fact_chunk() {
-            fact_chunk
-                .expect("Fact chunk requirement already verified")
-                .samples
-                .try_into()?
+        let sample_length: usize = if let Some(chunk) = fact_chunk {
+            chunk.samples.try_into()?
         } else {
             (8 * data_chunk.size)
                 / (fmt_chunk.bits_per_sample as usize * fmt_chunk.channels as usize)
@@ -123,7 +100,7 @@ impl WavFile {
         };
 
         let raw_details = RawDetail {
-            format_tag,
+            format_tag: u16::from_le_bytes(fmt_chunk.format_tag),
             channels: fmt_chunk.channels.into(),
             sample_rate: fmt_chunk.samples_per_sec.try_into()?,
             data_rate: fmt_chunk.avg_bytes_per_sec.try_into()?,
