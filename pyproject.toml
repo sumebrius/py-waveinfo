@@ -20,6 +20,7 @@ dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://py-waveinfo.readthedocs.io"
+Documentation = "https://py-waveinfo.readthedocs.io/en/stable"
 Repository = "https://github.com/sumebrius/py-waveinfo"
 
 [tool.maturin]
