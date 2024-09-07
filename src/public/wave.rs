@@ -12,9 +12,10 @@ use crate::{
 use super::detail::{RawDetail, WavDetail};
 
 #[pyclass(get_all, module = "waveinfo")]
+#[derive(Debug, PartialEq)]
 pub struct WavFile {
-    pub raw_details: RawDetail,
-    info: HashMap<String, String>,
+    pub(crate) raw_details: RawDetail,
+    pub(crate) info: HashMap<String, String>,
     //TODO - add this when we do something with it, otherwise it just takes up memory.
     // data: Bytes,
 }

@@ -1,10 +1,35 @@
+use std::collections::HashMap;
+
 use detail::SpeakerPosition;
 use pyo3::types::PyDict;
 
 use super::*;
 
 #[test]
-fn constructor() {
+fn basic_instantiation() {
+    let test_file: PathBuf = ["tests", "assets", "arc_master.wav"].iter().collect();
+    let wav_file = wave::WavFile::rs_new(ConstructorArg::Path(test_file));
+
+    let expected = wave::WavFile {
+        raw_details: detail::RawDetail {
+            format_tag: 0x0001,
+            channels: 2,
+            sample_rate: 192000,
+            data_rate: 768000,
+            block_size: 4,
+            sample_depth: 16,
+            channel_mask: None,
+            subformat: None,
+            total_samples: 38433,
+        },
+        info: HashMap::<String, String>::new(),
+    };
+
+    assert_eq!(wav_file.unwrap(), expected);
+}
+
+#[test]
+fn constructor_args() {
     pyo3::prepare_freethreaded_python();
     Python::with_gil(|py| {
         let locals = PyDict::new_bound(py);

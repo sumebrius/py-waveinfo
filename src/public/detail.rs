@@ -71,7 +71,7 @@ impl From<&RawDetail> for WavDetail {
 }
 
 #[pyclass(get_all, module = "waveinfo")]
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RawDetail {
     pub format_tag: u16,
     pub channels: usize,
