@@ -1,5 +1,9 @@
 # Changelog
 
+## 2024-09-24 - v0.4.0
+
+- Add many more recognised format tags
+
 ## 2024-09-07 - v0.3.2
 
 ### Bugfixes
