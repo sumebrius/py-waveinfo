@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use detail::SpeakerPosition;
-use pyo3::types::PyDict;
+use pyo3::py_run;
+use pyo3::types::{IntoPyDict, PyDict};
 
 use super::*;
 
@@ -30,21 +31,20 @@ fn basic_instantiation() {
 
 #[test]
 fn constructor_args() {
-    pyo3::prepare_freethreaded_python();
-    Python::with_gil(|py| {
-        let locals = PyDict::new_bound(py);
-        py.run_bound(
+    Python::initialize();
+    Python::attach(|py| {
+        let locals = PyDict::new(py);
+        py_run!(
+            py,
+            *locals,
             r#"
 from io import BytesIO
 from pathlib import Path
 bytes_arg = b"RIFF"
 path_str_arg = "tests/assets/arc_master.wav"
 path_obj_arg = Path(path_str_arg)
-file_arg = BytesIO(bytes_arg)"#,
-            None,
-            Some(&locals),
-        )
-        .unwrap();
+file_arg = BytesIO(bytes_arg)"#
+        );
 
         for arg_name in ["bytes_arg", "path_str_arg", "path_obj_arg", "file_arg"] {
             let arg = locals
@@ -79,21 +79,18 @@ fn detail_duration_getter() {
         channel_positions: vec![detail::SpeakerPosition::FRONT_LEFT],
     };
 
-    pyo3::prepare_freethreaded_python();
-    Python::with_gil(|py| {
-        let locals = PyDict::new_bound(py);
-        locals
-            .set_item("detail_obj", Py::new(py, wav_detail).unwrap())
+    Python::initialize();
+    Python::attach(|py| {
+        let locals = [("detail_obj", Py::new(py, wav_detail).unwrap())]
+            .into_py_dict(py)
             .unwrap();
-
-        py.run_bound(
+        py_run!(
+            py,
+            *locals,
             r#"
 from datetime import timedelta
-res = detail_obj.duration == timedelta(seconds=42.6)"#,
-            None,
-            Some(&locals),
-        )
-        .unwrap();
+res = detail_obj.duration == timedelta(seconds=42.6)"#
+        );
 
         assert!(locals
             .get_item("res")

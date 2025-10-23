@@ -28,10 +28,7 @@ pub(crate) fn read_from_filelike(filelike: Bound<'_, PyAny>) -> PyResult<Vec<u8>
 
 #[cfg(test)]
 mod tests {
-    use pyo3::{
-        exceptions::PyAttributeError,
-        types::{PyDict, PyType},
-    };
+    use pyo3::{exceptions::PyAttributeError, py_run, types::PyDict};
 
     use super::*;
 
@@ -46,17 +43,16 @@ mod tests {
 
     #[test]
     fn read_filelike_ok() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
-            let locals = PyDict::new_bound(py);
-            py.run_bound(
+        Python::initialize();
+        Python::attach(|py| {
+            let locals = PyDict::new(py);
+            py_run!(
+                py,
+                *locals,
                 r#"
 import io
-filelike = io.BytesIO(b'test')"#,
-                None,
-                Some(&locals),
-            )
-            .unwrap();
+filelike = io.BytesIO(b'test')"#
+            );
             let filelike = locals.get_item("filelike").unwrap().unwrap();
             let result = read_from_filelike(filelike);
             assert!(result.is_ok());
@@ -66,15 +62,12 @@ filelike = io.BytesIO(b'test')"#,
 
     #[test]
     fn read_filelike_bad_object() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
-            let filelike = py.eval_bound("{b'test'}", None, None).unwrap();
+        Python::initialize();
+        Python::attach(|py| {
+            let filelike = py.eval(c"{b'test'}", None, None).unwrap();
             let result = read_from_filelike(filelike);
             assert!(result.is_err());
-            assert!(result
-                .unwrap_err()
-                .get_type_bound(py)
-                .is(&PyType::new_bound::<PyAttributeError>(py)));
+            assert!(result.unwrap_err().is_instance_of::<PyAttributeError>(py));
         })
     }
 }

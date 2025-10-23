@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display};
 use std::num::TryFromIntError;
 
-use crate::exceptions::WavLoadError;
+use crate::public::exceptions::WavLoadError;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct ChunkParseError {

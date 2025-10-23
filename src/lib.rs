@@ -6,17 +6,18 @@ mod formats;
 mod public;
 mod util;
 
-use public::*;
-
 #[pymodule]
-fn waveinfo(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<wave::WavFile>()?;
-    m.add_class::<detail::WavDetail>()?;
-    m.add_class::<detail::RawDetail>()?;
-    m.add_class::<Format>()?;
-    m.add(
-        "WavLoadError",
-        py.get_type_bound::<crate::public::exceptions::WavLoadError>(),
-    )?;
-    Ok(())
+mod waveinfo {
+    use crate::public::*;
+
+    #[pymodule_export]
+    use crate::formats::Format;
+    #[pymodule_export]
+    use detail::RawDetail;
+    #[pymodule_export]
+    use detail::WavDetail;
+    #[pymodule_export]
+    use exceptions::WavLoadError;
+    #[pymodule_export]
+    use wave::WavFile;
 }

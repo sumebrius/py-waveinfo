@@ -6,7 +6,6 @@ pub mod detail;
 pub mod exceptions;
 pub mod wave;
 
-pub use crate::formats::Format;
 use crate::util::read_from_filelike;
 
 #[derive(FromPyObject)]

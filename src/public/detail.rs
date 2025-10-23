@@ -31,7 +31,7 @@ impl WavDetail {
         let days = 0;
         let seconds = self.duration.trunc() as i32;
         let microseconds = (self.duration.fract() * 1_000_000.0) as i32;
-        PyDelta::new_bound(py, days, seconds, microseconds, true)
+        PyDelta::new(py, days, seconds, microseconds, true)
     }
 }
 
