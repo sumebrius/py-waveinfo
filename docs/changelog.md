@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-10-23 - v0.5.0
+
+- Update `pyo3` dependency to allow building for newer python versions.
+
 ## 2024-09-24 - v0.4.0
 
 - Add many more recognised format tags
